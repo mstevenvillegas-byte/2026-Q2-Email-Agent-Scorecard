@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q2 — Agent Scorecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0E1520;
+    --panel: #161F2E;
+    --panel-2: #1B2536;
+    --panel-3: #212C40;
+    --border: #263145;
+    --border-soft: #1E2836;
+    --text: #E8EDF5;
+    --text-dim: #8FA0B8;
+    --text-faint: #5D6B82;
+    --accent: #4FD1C5;
+    --accent-dim: rgba(79,209,197,0.14);
+
+    --excellent: #34D399;
+    --excellent-bg: rgba(52,211,153,0.13);
+    --targets: #60A5FA;
+    --targets-bg: rgba(96,165,250,0.13);
+    --below: #FBBF24;
+    --below-bg: rgba(251,191,36,0.13);
+    --monitor: #F87171;
+    --monitor-bg: rgba(248,113,113,0.13);
+
+    --g-quality: #2F6F52;
+    --g-attend: #2C5C87;
+    --g-volume: #5B3F8C;
+    --g-speed: #8A5330;
+    --g-effic: #1E7A72;
+    --g-outcome: #35405C;
+    --g-agent: #232E42;
+
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num{ font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace; font-variant-numeric: tabular-nums; }
+
+  #app{ max-width: 1180px; margin: 0 auto; padding: 0 18px 60px; }
+
+  /* ---------- Sticky title + filter zone ---------- */
+  .sticky-head{
+    position: sticky; top: 0; z-index: 100; background: var(--bg);
+    padding-top: 22px; margin: 0 -18px; padding-left:18px; padding-right:18px;
+  }
+
+  /* ---------- Header ---------- */
+  header.top{
+    display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:14px;
+    padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid var(--border-soft);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+    color: var(--accent); margin:0 0 6px;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:26px; margin:0; letter-spacing:-0.01em;
+  }
+  .cx-line{ font-style: italic; color: var(--text-dim); font-size:12.5px; margin:4px 0 0; }
+  .scope-line{
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--text-dim);
+    background: var(--panel); border:1px solid var(--border); border-radius:999px;
+    padding:7px 14px; white-space:nowrap;
+  }
+  .scope-line b{ color:var(--text); font-weight:600; }
+
+  /* ---------- Filter bar ---------- */
+  .filterbar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background: var(--panel); border:1px solid var(--border); border-radius: var(--radius-lg);
+    padding:14px 16px; margin-bottom:22px;
+  }
+  .filter-group{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .filter-label{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); margin-right:2px; }
+  .seg{ display:flex; background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:3px; }
+  .seg button{
+    appearance:none; border:none; background:transparent; color:var(--text-dim);
+    font-family:'Inter', sans-serif; font-size:12.5px; font-weight:600; padding:6px 12px; border-radius:6px; cursor:pointer;
+    transition: background .15s, color .15s;
+  }
+  .seg button.active{ background: var(--accent); color:#0E1520; }
+  .seg button:hover:not(.active){ color:var(--text); }
+
+  select{
+    appearance:none; background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    font-family:'Inter', sans-serif; font-size:12.5px; font-weight:500; padding:7px 30px 7px 12px; border-radius:8px;
+    cursor:pointer; min-width:150px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238FA0B8'/></svg>");
+    background-repeat:no-repeat; background-position: right 12px center;
+  }
+  select:focus, button:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  .divider{ width:1px; align-self:stretch; background:var(--border); margin:0 2px; }
+
+  /* ---------- Section shell ---------- */
+  section.block{ margin-bottom:28px; }
+  .block-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+  .block-title{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:17px; }
+  .block-note{ font-size:12px; color:var(--text-faint); }
+  .card{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px; }
+
+  /* ---------- Agent status badges ---------- */
+  .badge{ display:inline-block; padding:2px 9px; border-radius:99px; font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; }
+  .badge-Active{ background:rgba(79,209,197,0.14); color:var(--accent); }
+  .badge-Admin{ background:rgba(96,165,250,0.14); color:var(--targets); }
+  .badge-Inactive{ background:rgba(93,107,130,0.18); color:var(--text-faint); }
+
+  /* ---------- Top performer ---------- */
+  .top-wrap{ display:grid; grid-template-columns: 1.1fr 1.4fr; gap:14px; }
+  @media (max-width:760px){ .top-wrap{ grid-template-columns:1fr; } }
+  .hero{
+    background: linear-gradient(135deg, #16332C 0%, var(--panel) 65%);
+    border:1px solid #234238; border-radius:var(--radius-lg); padding:14px 18px;
+    display:flex; flex-direction:column; justify-content:center; gap:4px; position:relative; overflow:hidden; min-height:118px;
+  }
+  .hero::after{
+    content:"01"; position:absolute; right:8px; top:50%; transform:translateY(-50%); text-align:center;
+    font-family:'JetBrains Mono',monospace; font-size:104px; font-weight:700; color:rgba(52,211,153,0.10); line-height:1;
+  }
+  .hero-eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--excellent); }
+  .hero-name{ font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; }
+  .hero-meta{ color:var(--text-dim); font-size:12px; }
+  .hero-score{ display:flex; align-items:baseline; gap:8px; margin-top:2px; }
+  .hero-score .num{ font-size:28px; font-weight:600; color:var(--excellent); }
+  .hero-score .label{ color:var(--text-faint); font-size:12px; }
+
+  .leaderboard{ display:flex; flex-direction:column; gap:8px; }
+  .lb-row{
+    display:flex; align-items:center; gap:12px; background:var(--panel-2); border:1px solid var(--border-soft);
+    border-radius:10px; padding:10px 14px;
+  }
+  .lb-rank{ font-family:'JetBrains Mono',monospace; color:var(--text-faint); width:20px; font-size:13px; }
+  .lb-name{ flex:1; font-weight:600; font-size:13.5px; }
+  .lb-bar-wrap{ flex:1.4; height:6px; background:#0F1621; border-radius:99px; overflow:hidden; }
+  .lb-bar{ height:100%; border-radius:99px; }
+  .lb-score{ width:34px; text-align:right; font-weight:600; }
+
+  /* ---------- Scorecard table ---------- */
+  .table-scroll{ overflow-x:auto; border-radius:var(--radius-lg); border:1px solid var(--border); }
+  table.scorecard{ border-collapse:collapse; width:100%; min-width:960px; background:var(--panel); }
+  table.scorecard th, table.scorecard td{ padding:10px 10px; text-align:center; border-bottom:1px solid var(--border-soft); white-space:nowrap; }
+  table.scorecard td.agent-cell, table.scorecard th.agent-head{ text-align:left; position:sticky; left:0; z-index:2; min-width:150px; }
+  table.scorecard td.agent-cell{ background:var(--panel); }
+  table.scorecard tr:hover td{ background: var(--panel-2); }
+  table.scorecard tr:hover td.agent-cell{ background: var(--panel-2); }
+
+  .grp-row th{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:#fff; padding:8px 10px; border-bottom:none; }
+  .grp-sub{ display:block; font-size:8.5px; font-weight:400; text-transform:none; letter-spacing:0; opacity:.78; margin-top:1px; font-family:'Inter',sans-serif; }
+  .g-quality{ background:var(--g-quality); } .g-attend{ background:var(--g-attend); } .g-volume{ background:var(--g-volume); }
+  .g-speed{ background:var(--g-speed); } .g-effic{ background:var(--g-effic); } .g-outcome{ background:var(--g-outcome); }
+  .g-agent{ background:var(--g-agent); }
+
+  .sub-row th{ font-size:13px; color:var(--text); font-weight:700; background:var(--panel-3); border-bottom:1px solid var(--border); padding:10px 10px; }
+
+  .target-row td{ background:var(--panel-2); color:var(--text-dim); font-style:italic; font-size:12.5px; }
+  .target-row td.agent-cell{ background:var(--panel-2); font-weight:600; color:var(--accent); font-style:normal; }
+  .vol-based{ font-size:11px; }
+
+  .status-pill{ display:inline-block; padding:3px 9px; border-radius:99px; font-size:11px; font-weight:600; white-space:nowrap; }
+  .st-Excellent{ background:var(--excellent-bg); color:var(--excellent); }
+  .st-TargetsMet{ background:var(--targets-bg); color:var(--targets); }
+  .st-BelowTarget{ background:var(--below-bg); color:var(--below); }
+  .st-Monitoring{ background:var(--monitor-bg); color:var(--monitor); }
+
+  .score-cell{ display:flex; align-items:center; gap:8px; min-width:78px; }
+  .score-num{ font-weight:700; width:26px; text-align:right; }
+  .score-bar-wrap{ flex:1; height:6px; background:#0F1621; border-radius:99px; overflow:hidden; min-width:40px; }
+  .score-bar{ height:100%; border-radius:99px; }
+  .agent-name{ font-weight:600; margin-right:6px; }
+
+  /* ---------- Individual card ---------- */
+  .indiv-card{ display:grid; grid-template-columns: 210px 1fr; gap:22px; }
+  @media (max-width:700px){ .indiv-card{ grid-template-columns:1fr; } }
+  .indiv-score-block{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:var(--panel-2); border-radius:14px; padding:20px; }
+  .indiv-score-num{ font-family:'Space Grotesk',sans-serif; font-size:44px; font-weight:700; }
+  .metric-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+  .metric-tile{ background:var(--panel-2); border:1px solid var(--border-soft); border-left:3px solid var(--border-soft); border-radius:10px; padding:10px 12px; }
+  .metric-tile .mt-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:4px; }
+  .metric-tile .mt-val{ font-weight:600; font-size:15px; }
+  .metric-tile .mt-pts{ font-size:11px; color:var(--text-dim); margin-left:4px; }
+  .tile-ok{ border-left-color: var(--excellent); }
+  .tile-warn{ border-left-color: var(--below); }
+  .tile-bad{ border-left-color: var(--monitor); }
+  .tile-bad .mt-val{ color: var(--monitor); }
+  .tile-warn .mt-val{ color: var(--below); }
+
+  .weeks-mini{ margin-top:16px; }
+  .weeks-mini table{ width:100%; border-collapse:collapse; font-size:12px; }
+  .weeks-mini th{ text-align:left; color:var(--text-faint); font-weight:600; padding:6px 8px; border-bottom:1px solid var(--border); }
+  .weeks-mini td{ padding:6px 8px; border-bottom:1px solid var(--border-soft); }
+
+  /* ---------- Productivity table ---------- */
+  table.prod{ border-collapse:collapse; width:100%; min-width:700px; background:var(--panel); }
+  table.prod th, table.prod td{ padding:10px 12px; text-align:center; border-bottom:1px solid var(--border-soft); }
+  table.prod th:first-child, table.prod td:first-child{ text-align:left; position:sticky; left:0; background:var(--panel); }
+  table.prod thead th{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); cursor:pointer; user-select:none; background:var(--panel-2); }
+  table.prod thead th:hover{ color:var(--accent); }
+  table.prod thead th.sorted{ color:var(--accent); }
+  table.prod tr:hover td{ background:var(--panel-2); }
+  table.prod tr.low-activity td{ color: var(--monitor); }
+  table.prod tr.low-activity td.total-col{ color: var(--monitor); }
+  table.prod tr.total-row td{ font-weight:700; background:var(--panel-2); border-top:1px solid var(--border); }
+  .total-col{ color:var(--accent); font-weight:700; }
+  .empty-val{ color:var(--text-faint); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="sticky-head">
+    <header class="top">
+      <div>
+        <p class="eyebrow">Bellezza · Email Customer Service</p>
+        <h1>2026 Q2 — Agent Scorecard</h1>
+        <p class="cx-line">Head of CX: Steven Villegas</p>
+      </div>
+      <div class="scope-line" id="scopeLine">—</div>
+    </header>
+
+    <div class="filterbar">
+      <div class="filter-group">
+        <span class="filter-label">Date</span>
+        <div class="seg" id="dateModeSeg">
+          <button data-mode="week">Week</button>
+          <button data-mode="month">Month</button>
+          <button data-mode="all">All (Q2)</button>
+        </div>
+        <select id="weekSelect" style="display:none;"></select>
+        <select id="monthSelect" style="display:none;"></select>
+      </div>
+      <div class="divider"></div>
+      <div class="filter-group">
+        <span class="filter-label">Agent</span>
+        <div class="seg" id="agentModeSeg">
+          <button data-mode="all">All agents</button>
+          <button data-mode="individual">Individual</button>
+        </div>
+        <select id="agentSelect" style="display:none;"></select>
+      </div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="block-title">Top Performer</span>
+      <span class="block-note" id="topNote">Ranked by Total Score across all agents active in the selected period</span>
+    </div>
+    <div class="card">
+      <div class="top-wrap" id="topPerformerWrap"></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="block-title" id="scorecardTitle">Agent Score — All Agents</span>
+      <span class="block-note">Target row reflects current live targets</span>
+    </div>
+    <div id="scorecardArea"></div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="block-title">Overall Productivity</span>
+      <span class="block-note">Tickets, Messages, Brandwise (social) &amp; Shopify Alerts — click a column to sort</span>
+    </div>
+    <div class="table-scroll">
+      <table class="prod" id="prodTable">
+        <thead><tr id="prodHeadRow"></tr></thead>
+        <tbody id="prodBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<script type="application/json" id="raw-data">
+[{"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Zia", "csat": 5.0, "qa": 30.0, "ha": 0.62, "tickets": 145, "messages": 270, "frtMin": 3.8166666666666664, "artMin": 14.133333333333333, "frtDisplay": "3m 49s", "artDisplay": "14m 08s", "ticketsPerHr": 7.2, "messagesPerHr": 13.41, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Sandra", "csat": 3.86, "qa": 44.0, "ha": 0.65, "tickets": 97, "messages": 211, "frtMin": 10.933333333333334, "artMin": 16.183333333333334, "frtDisplay": "10m 56s", "artDisplay": "16m 11s", "ticketsPerHr": 3.66, "messagesPerHr": 7.97, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Nina", "csat": 4.33, "qa": 31.0, "ha": 0.85, "tickets": 100, "messages": 225, "frtMin": 2.183333333333333, "artMin": 8.55, "frtDisplay": "2m 11s", "artDisplay": "8m 33s", "ticketsPerHr": 5.87, "messagesPerHr": 13.22, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Mary", "csat": 4.6, "qa": 47.7, "ha": 0.61, "tickets": 182, "messages": 420, "frtMin": 2.1333333333333333, "artMin": 3.35, "frtDisplay": "2m 08s", "artDisplay": "3m 21s", "ticketsPerHr": 9.34, "messagesPerHr": 21.55, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Maricar", "csat": 3.7, "qa": 49.0, "ha": 0.66, "tickets": 123, "messages": 254, "frtMin": 13.083333333333334, "artMin": 26.283333333333335, "frtDisplay": "13m 05s", "artDisplay": "26m 17s", "ticketsPerHr": 5.29, "messagesPerHr": 10.92, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Lei", "csat": 4.9, "qa": 47.7, "ha": 0.84, "tickets": 160, "messages": 339, "frtMin": 4.966666666666667, "artMin": 7.6, "frtDisplay": "4m 58s", "artDisplay": "7m 36s", "ticketsPerHr": 7.6, "messagesPerHr": 16.1, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Krisha", "csat": 3.8, "qa": 49.3, "ha": 0.69, "tickets": 136, "messages": 274, "frtMin": 4.516666666666667, "artMin": 8.133333333333333, "frtDisplay": "4m 31s", "artDisplay": "8m 08s", "ticketsPerHr": 5.75, "messagesPerHr": 11.58, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Justine", "csat": 4.6, "qa": 49.3, "ha": 0.68, "tickets": 155, "messages": 325, "frtMin": 4.45, "artMin": 7.316666666666666, "frtDisplay": "4m 27s", "artDisplay": "7m 19s", "ticketsPerHr": 7.91, "messagesPerHr": 16.59, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Jude", "csat": 4.6, "qa": 30.3, "ha": 0.76, "tickets": 212, "messages": 348, "frtMin": 5.133333333333334, "artMin": 7.216666666666667, "frtDisplay": "5m 08s", "artDisplay": "7m 13s", "ticketsPerHr": 7.12, "messagesPerHr": 11.68, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Jordan", "csat": 4.5, "qa": 48.3, "ha": 0.68, "tickets": 231, "messages": 429, "frtMin": 10.733333333333333, "artMin": 16.85, "frtDisplay": "10m 44s", "artDisplay": "16m 51s", "ticketsPerHr": 8.16, "messagesPerHr": 15.15, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Jesthel", "csat": 3.69, "qa": 44.3, "ha": 0.58, "tickets": 176, "messages": 326, "frtMin": 6.65, "artMin": 9.85, "frtDisplay": "6m 39s", "artDisplay": "9m 51s", "ticketsPerHr": 5.62, "messagesPerHr": 10.41, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Jerel", "csat": 5.0, "qa": 32.0, "ha": 0.71, "tickets": 120, "messages": 279, "frtMin": 1.2333333333333334, "artMin": 6.316666666666666, "frtDisplay": "1m 14s", "artDisplay": "6m 19s", "ticketsPerHr": 6.42, "messagesPerHr": 14.93, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Earl", "csat": 4.33, "qa": 29.3, "ha": 0.81, "tickets": 204, "messages": 391, "frtMin": 8.516666666666667, "artMin": 10.616666666666667, "frtDisplay": "8m 31s", "artDisplay": "10m 37s", "ticketsPerHr": 7.26, "messagesPerHr": 13.91, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Carla", "csat": 4.45, "qa": 46.3, "ha": 0.82, "tickets": 102, "messages": 232, "frtMin": 2.7333333333333334, "artMin": 4.95, "frtDisplay": "2m 44s", "artDisplay": "4m 57s", "ticketsPerHr": 4.8, "messagesPerHr": 10.92, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Angelo", "csat": 4.15, "qa": 46.3, "ha": 0.81, "tickets": 247, "messages": 410, "frtMin": 23.766666666666666, "artMin": 20.05, "frtDisplay": "23m 46s", "artDisplay": "20m 03s", "ticketsPerHr": 10.89, "messagesPerHr": 18.08, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Denver", "csat": 5.0, "qa": 43.0, "ha": 0.72, "tickets": 143, "messages": 193, "frtMin": 31.7, "artMin": 26.216666666666665, "frtDisplay": "31m 42s", "artDisplay": "26m 13s", "ticketsPerHr": 10.47, "messagesPerHr": 14.13, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Christian", "csat": 4.44, "qa": 31.7, "ha": 0.7, "tickets": 198, "messages": 295, "frtMin": 79.0, "artMin": 90.0, "frtDisplay": "1h 19m", "artDisplay": "1h 30m", "ticketsPerHr": 10.15, "messagesPerHr": 15.12, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W1", "month": "April", "week": "W1", "dateRange": "March 30 - April 5", "agent": "Luzel", "csat": null, "qa": 33.3, "ha": 0.69, "tickets": null, "messages": null, "frtMin": null, "artMin": null, "frtDisplay": "", "artDisplay": "", "ticketsPerHr": null, "messagesPerHr": null, "ticketsTarget": 118.875, "messagesTarget": 336.5625, "tphTarget": 2.971875, "mphTarget": 8.4140625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Zia", "csat": 4.88, "qa": 48.7, "ha": 0.65, "tickets": 130, "messages": 287, "frtMin": 2.2666666666666666, "artMin": 9.516666666666667, "frtDisplay": "2m 16s", "artDisplay": "9m 31s", "ticketsPerHr": 6.02, "messagesPerHr": 13.3, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Sandra", "csat": 4.63, "qa": 48.3, "ha": 0.64, "tickets": 116, "messages": 269, "frtMin": 4.783333333333333, "artMin": 8.366666666666667, "frtDisplay": "4m 47s", "artDisplay": "8m 22s", "ticketsPerHr": 5.56, "messagesPerHr": 12.9, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Nina", "csat": 5.0, "qa": 16.7, "ha": 0.86, "tickets": 70, "messages": 148, "frtMin": 3.75, "artMin": 13.6, "frtDisplay": "3m 45s", "artDisplay": "13m 36s", "ticketsPerHr": 5.65, "messagesPerHr": 11.95, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Mary", "csat": 4.67, "qa": 33.3, "ha": 0.63, "tickets": 188, "messages": 438, "frtMin": 3.0, "artMin": 3.3166666666666664, "frtDisplay": "3m", "artDisplay": "3m 19s", "ticketsPerHr": 10.08, "messagesPerHr": 23.49, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Maricar", "csat": 5.0, "qa": 48.3, "ha": 0.62, "tickets": 118, "messages": 223, "frtMin": 13.55, "artMin": 18.133333333333333, "frtDisplay": "13m 33s", "artDisplay": "18m 08s", "ticketsPerHr": 4.39, "messagesPerHr": 8.3, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Lei", "csat": 4.11, "qa": 49.3, "ha": 0.84, "tickets": 174, "messages": 383, "frtMin": 2.7333333333333334, "artMin": 4.2, "frtDisplay": "2m 44s", "artDisplay": "4m 12s", "ticketsPerHr": 8.23, "messagesPerHr": 18.13, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Krisha", "csat": 5.0, "qa": 50.0, "ha": 0.66, "tickets": 102, "messages": 247, "frtMin": 3.2, "artMin": 7.983333333333333, "frtDisplay": "3m 12s", "artDisplay": "7m 59s", "ticketsPerHr": 4.75, "messagesPerHr": 11.5, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Justine", "csat": 4.84, "qa": 49.0, "ha": 0.63, "tickets": 142, "messages": 305, "frtMin": 3.25, "artMin": 5.833333333333333, "frtDisplay": "3m 15s", "artDisplay": "5m 50s", "ticketsPerHr": 7.31, "messagesPerHr": 15.7, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Jude", "csat": 4.35, "qa": 15.0, "ha": 0.76, "tickets": 192, "messages": 288, "frtMin": 6.25, "artMin": 7.55, "frtDisplay": "6m 15s", "artDisplay": "7m 33s", "ticketsPerHr": 6.89, "messagesPerHr": 10.33, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Jordan", "csat": 4.83, "qa": 50.0, "ha": 0.62, "tickets": 194, "messages": 379, "frtMin": 9.483333333333333, "artMin": 14.783333333333333, "frtDisplay": "9m 29s", "artDisplay": "14m 47s", "ticketsPerHr": 7.19, "messagesPerHr": 14.04, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Jesthel", "csat": 4.67, "qa": 48.3, "ha": 0.64, "tickets": 192, "messages": 418, "frtMin": 6.266666666666667, "artMin": 8.583333333333334, "frtDisplay": "6m 16s", "artDisplay": "8m 35s", "ticketsPerHr": 7.4, "messagesPerHr": 16.12, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Jerel", "csat": 4.6, "qa": 48.7, "ha": 0.77, "tickets": 115, "messages": 295, "frtMin": 1.6333333333333333, "artMin": 3.3333333333333335, "frtDisplay": "1m 38s", "artDisplay": "3m 20s", "ticketsPerHr": 6.61, "messagesPerHr": 16.95, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Earl", "csat": 4.56, "qa": 32.0, "ha": 0.88, "tickets": 178, "messages": 364, "frtMin": 5.266666666666667, "artMin": 7.466666666666667, "frtDisplay": "5m 16s", "artDisplay": "7m 28s", "ticketsPerHr": 6.11, "messagesPerHr": 12.5, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Carla", "csat": 4.0, "qa": 31.0, "ha": 0.81, "tickets": 80, "messages": 195, "frtMin": 1.0833333333333333, "artMin": 2.8333333333333335, "frtDisplay": "1m 05s", "artDisplay": "2m 50s", "ticketsPerHr": 4.49, "messagesPerHr": 10.94, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Angelo", "csat": 5.0, "qa": 16.0, "ha": 0.8, "tickets": 226, "messages": 442, "frtMin": 5.466666666666667, "artMin": 7.75, "frtDisplay": "5m 28s", "artDisplay": "7m 45s", "ticketsPerHr": 10.05, "messagesPerHr": 19.66, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Denver", "csat": 5.0, "qa": 47.7, "ha": 0.68, "tickets": 106, "messages": 168, "frtMin": 12.6, "artMin": 10.7, "frtDisplay": "12m 36s", "artDisplay": "10m 42s", "ticketsPerHr": 7.46, "messagesPerHr": 11.82, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Christian", "csat": 4.33, "qa": 48.0, "ha": 0.69, "tickets": 80, "messages": 127, "frtMin": 124.0, "artMin": 124.0, "frtDisplay": "2h 04m", "artDisplay": "2h 04m", "ticketsPerHr": 3.17, "messagesPerHr": 5.03, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W2", "month": "April", "week": "W2", "dateRange": "April 6 - April 12", "agent": "Luzel", "csat": null, "qa": 50.0, "ha": 0.76, "tickets": 22, "messages": 32, "frtMin": 5.433333333333334, "artMin": 11.7, "frtDisplay": "5m 26s", "artDisplay": "11m 42s", "ticketsPerHr": 1.56, "messagesPerHr": 2.27, "ticketsTarget": 106.5, "messagesTarget": 309.625, "tphTarget": 2.6625, "mphTarget": 7.740625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Zia", "csat": 4.83, "qa": 49.3, "ha": 0.65, "tickets": 104, "messages": 226, "frtMin": 4.633333333333333, "artMin": 10.916666666666666, "frtDisplay": "4m 38s", "artDisplay": "10m 55s", "ticketsPerHr": 4.72, "messagesPerHr": 10.25, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Sandra", "csat": 3.8, "qa": 47.0, "ha": 0.72, "tickets": 96, "messages": 221, "frtMin": 5.933333333333334, "artMin": 9.6, "frtDisplay": "5m 56s", "artDisplay": "9m 36s", "ticketsPerHr": 4.95, "messagesPerHr": 11.39, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Nina", "csat": 3.13, "qa": 0.0, "ha": 0.82, "tickets": 92, "messages": 238, "frtMin": 1.7833333333333332, "artMin": 8.166666666666666, "frtDisplay": "1m 47s", "artDisplay": "8m 10s", "ticketsPerHr": 4.92, "messagesPerHr": 12.72, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Mary", "csat": 4.67, "qa": 47.3, "ha": 0.69, "tickets": 214, "messages": 520, "frtMin": 1.9166666666666665, "artMin": 3.05, "frtDisplay": "1m 55s", "artDisplay": "3m 03s", "ticketsPerHr": 10.63, "messagesPerHr": 25.83, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Maricar", "csat": 4.64, "qa": 40.3, "ha": 0.65, "tickets": 129, "messages": 257, "frtMin": 12.066666666666666, "artMin": 14.233333333333333, "frtDisplay": "12m 04s", "artDisplay": "14m 14s", "ticketsPerHr": 4.41, "messagesPerHr": 8.79, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Lei", "csat": 4.9, "qa": 33.3, "ha": 0.85, "tickets": 141, "messages": 348, "frtMin": 0.0, "artMin": 1.5, "frtDisplay": "39s", "artDisplay": "1m 30s", "ticketsPerHr": 7.03, "messagesPerHr": 17.35, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Krisha", "csat": 4.8, "qa": 50.0, "ha": 0.66, "tickets": 73, "messages": 183, "frtMin": 5.35, "artMin": 9.066666666666666, "frtDisplay": "5m 21s", "artDisplay": "9m 04s", "ticketsPerHr": 3.82, "messagesPerHr": 9.58, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Justine", "csat": 4.45, "qa": 46.3, "ha": 0.45, "tickets": 145, "messages": 289, "frtMin": 4.083333333333333, "artMin": 5.816666666666666, "frtDisplay": "4m 05s", "artDisplay": "5m 49s", "ticketsPerHr": 6.66, "messagesPerHr": 13.28, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Jude", "csat": 4.47, "qa": 35.7, "ha": 0.77, "tickets": 211, "messages": 350, "frtMin": 7.666666666666667, "artMin": 8.3, "frtDisplay": "7m 40s", "artDisplay": "8m 18s", "ticketsPerHr": 7.93, "messagesPerHr": 13.15, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Jordan", "csat": 4.69, "qa": 34.7, "ha": 0.67, "tickets": 233, "messages": 441, "frtMin": 16.166666666666668, "artMin": 17.85, "frtDisplay": "16m 10s", "artDisplay": "17m 51s", "ticketsPerHr": 7.82, "messagesPerHr": 14.8, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Jesthel", "csat": 4.17, "qa": 40.3, "ha": 0.59, "tickets": 176, "messages": 349, "frtMin": 8.766666666666667, "artMin": 9.766666666666667, "frtDisplay": "8m 46s", "artDisplay": "9m 46s", "ticketsPerHr": 8.38, "messagesPerHr": 16.61, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Jerel", "csat": 4.82, "qa": 25.7, "ha": 0.84, "tickets": 206, "messages": 585, "frtMin": 1.1833333333333333, "artMin": 2.45, "frtDisplay": "1m 11s", "artDisplay": "2m 27s", "ticketsPerHr": 8.2, "messagesPerHr": 23.27, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Earl", "csat": 4.11, "qa": 10.7, "ha": 0.86, "tickets": 198, "messages": 457, "frtMin": 3.65, "artMin": 6.883333333333333, "frtDisplay": "3m 39s", "artDisplay": "6m 53s", "ticketsPerHr": 7.01, "messagesPerHr": 16.18, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Carla", "csat": 4.33, "qa": 33.3, "ha": 0.84, "tickets": 82, "messages": 219, "frtMin": 0.0, "artMin": 1.45, "frtDisplay": "35s", "artDisplay": "1m 27s", "ticketsPerHr": 4.3, "messagesPerHr": 11.49, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Angelo", "csat": 4.76, "qa": 39.0, "ha": 0.78, "tickets": 244, "messages": 471, "frtMin": 5.4, "artMin": 7.3, "frtDisplay": "5m 24s", "artDisplay": "7m 18s", "ticketsPerHr": 9.67, "messagesPerHr": 18.67, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Denver", "csat": 5.0, "qa": 42.0, "ha": 0.61, "tickets": 78, "messages": 135, "frtMin": 6.116666666666666, "artMin": 7.5, "frtDisplay": "6m 07s", "artDisplay": "7m 30s", "ticketsPerHr": 5.77, "messagesPerHr": 9.99, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Christian", "csat": 5.0, "qa": null, "ha": 0.7, "tickets": 19, "messages": 32, "frtMin": 6.8, "artMin": 26.933333333333334, "frtDisplay": "6m 48s", "artDisplay": "26m 56s", "ticketsPerHr": 0.82, "messagesPerHr": 1.38, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W3", "month": "April", "week": "W3", "dateRange": "April 13 - April 19", "agent": "Luzel", "csat": 4.67, "qa": 45.0, "ha": 0.8, "tickets": 69, "messages": 123, "frtMin": 9.466666666666667, "artMin": 12.183333333333334, "frtDisplay": "9m 28s", "artDisplay": "12m 11s", "ticketsPerHr": 5.21, "messagesPerHr": 9.29, "ticketsTarget": 107.125, "messagesTarget": 327.6875, "tphTarget": 2.678125, "mphTarget": 8.1921875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Zia", "csat": 4.0, "qa": 48.7, "ha": 0.63, "tickets": 109, "messages": 221, "frtMin": 1.4833333333333334, "artMin": 9.45, "frtDisplay": "1m 29s", "artDisplay": "9m 27s", "ticketsPerHr": 4.53, "messagesPerHr": 9.18, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Sandra", "csat": 5.0, "qa": 45.3, "ha": 0.72, "tickets": 88, "messages": 191, "frtMin": 6.533333333333333, "artMin": 12.3, "frtDisplay": "6m 32s", "artDisplay": "12m 18s", "ticketsPerHr": 4.75, "messagesPerHr": 10.31, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Nina", "csat": 4.33, "qa": 43.0, "ha": 0.8, "tickets": 102, "messages": 258, "frtMin": 1.45, "artMin": 5.416666666666667, "frtDisplay": "1m 27s", "artDisplay": "5m 25s", "ticketsPerHr": 4.23, "messagesPerHr": 10.71, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Mary", "csat": 4.69, "qa": 40.0, "ha": 0.63, "tickets": 209, "messages": 511, "frtMin": 1.1333333333333333, "artMin": 1.9833333333333334, "frtDisplay": "1m 08s", "artDisplay": "1m 59s", "ticketsPerHr": 10.79, "messagesPerHr": 26.38, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Maricar", "csat": 4.14, "qa": 42.3, "ha": 0.66, "tickets": 120, "messages": 254, "frtMin": 10.066666666666666, "artMin": 13.9, "frtDisplay": "10m 04s", "artDisplay": "13m 54s", "ticketsPerHr": 4.71, "messagesPerHr": 9.96, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Lei", "csat": 4.73, "qa": 45.7, "ha": 0.86, "tickets": 152, "messages": 408, "frtMin": 0.0, "artMin": 1.2666666666666666, "frtDisplay": "45s", "artDisplay": "1m 16s", "ticketsPerHr": 6.66, "messagesPerHr": 17.89, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Krisha", "csat": 4.5, "qa": 49.3, "ha": 0.63, "tickets": 70, "messages": 190, "frtMin": 3.066666666666667, "artMin": 8.483333333333333, "frtDisplay": "3m 04s", "artDisplay": "8m 29s", "ticketsPerHr": 4.04, "messagesPerHr": 10.98, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Justine", "csat": 5.0, "qa": 38.7, "ha": 0.5, "tickets": 191, "messages": 428, "frtMin": 4.1, "artMin": 6.616666666666667, "frtDisplay": "4m 06s", "artDisplay": "6m 37s", "ticketsPerHr": 8.4, "messagesPerHr": 18.83, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Jude", "csat": 4.64, "qa": 29.3, "ha": 0.76, "tickets": 330, "messages": 567, "frtMin": 7.6, "artMin": 7.433333333333334, "frtDisplay": "7m 36s", "artDisplay": "7m 26s", "ticketsPerHr": 10.73, "messagesPerHr": 18.43, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Jordan", "csat": 4.44, "qa": 36.3, "ha": 0.65, "tickets": 220, "messages": 422, "frtMin": 12.516666666666667, "artMin": 13.9, "frtDisplay": "12m 31s", "artDisplay": "13m 54s", "ticketsPerHr": 6.47, "messagesPerHr": 12.41, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Jesthel", "csat": 4.67, "qa": 31.3, "ha": 0.54, "tickets": 154, "messages": 292, "frtMin": 9.4, "artMin": 9.35, "frtDisplay": "9m 24s", "artDisplay": "9m 21s", "ticketsPerHr": 7.58, "messagesPerHr": 14.37, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Jerel", "csat": 4.85, "qa": 27.3, "ha": 0.78, "tickets": 152, "messages": 440, "frtMin": 1.9666666666666668, "artMin": 2.6166666666666667, "frtDisplay": "1m 58s", "artDisplay": "2m 37s", "ticketsPerHr": 6.16, "messagesPerHr": 17.84, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Earl", "csat": 4.36, "qa": 48.0, "ha": 0.87, "tickets": 134, "messages": 289, "frtMin": 3.9166666666666665, "artMin": 6.316666666666666, "frtDisplay": "3m 55s", "artDisplay": "6m 19s", "ticketsPerHr": 6.79, "messagesPerHr": 14.64, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Carla", "csat": 4.9, "qa": 45.7, "ha": 0.8, "tickets": 96, "messages": 244, "frtMin": 0.0, "artMin": 1.0333333333333334, "frtDisplay": "37s", "artDisplay": "1m 02s", "ticketsPerHr": 4.17, "messagesPerHr": 10.6, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Angelo", "csat": 4.94, "qa": 28.7, "ha": 0.75, "tickets": 166, "messages": 327, "frtMin": 5.166666666666667, "artMin": 6.1, "frtDisplay": "5m 10s", "artDisplay": "6m 06s", "ticketsPerHr": 8.05, "messagesPerHr": 15.85, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Denver", "csat": 4.8, "qa": 49.3, "ha": 0.55, "tickets": 96, "messages": 170, "frtMin": 1.85, "artMin": 3.2333333333333334, "frtDisplay": "1m 51s", "artDisplay": "3m 14s", "ticketsPerHr": 5.33, "messagesPerHr": 9.45, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Christian", "csat": 3.67, "qa": null, "ha": 0.71, "tickets": 55, "messages": 86, "frtMin": 5.116666666666666, "artMin": 8.2, "frtDisplay": "5m 07s", "artDisplay": "8m 12s", "ticketsPerHr": 2.47, "messagesPerHr": 3.87, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W4", "month": "April", "week": "W4", "dateRange": "April 20 - April 26", "agent": "Luzel", "csat": 4.0, "qa": 50.0, "ha": 0.78, "tickets": 68, "messages": 126, "frtMin": 9.316666666666666, "artMin": 12.066666666666666, "frtDisplay": "9m 19s", "artDisplay": "12m 04s", "ticketsPerHr": 4.57, "messagesPerHr": 8.47, "ticketsTarget": 105.375, "messagesTarget": 329.375, "tphTarget": 2.634375, "mphTarget": 8.234375, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Zia", "csat": 3.88, "qa": 16.3, "ha": 0.71, "tickets": 171, "messages": 395, "frtMin": 2.2666666666666666, "artMin": 5.483333333333333, "frtDisplay": "2m 16s", "artDisplay": "5m 29s", "ticketsPerHr": 7.1, "messagesPerHr": 15.51, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 19, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Sandra", "csat": 4.13, "qa": 33.3, "ha": 0.73, "tickets": 98, "messages": 223, "frtMin": 9.283333333333333, "artMin": 12.466666666666667, "frtDisplay": "9m 17s", "artDisplay": "12m 28s", "ticketsPerHr": 5.1, "messagesPerHr": 11.62, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Nina", "csat": 4.11, "qa": 49.7, "ha": 0.85, "tickets": 119, "messages": 298, "frtMin": 1.0666666666666667, "artMin": 6.35, "frtDisplay": "1m 04s", "artDisplay": "6m 21s", "ticketsPerHr": 4.14, "messagesPerHr": 10.6, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Mary", "csat": 4.16, "qa": 50.0, "ha": 0.6, "tickets": 222, "messages": 581, "frtMin": 1.2, "artMin": 1.85, "frtDisplay": "1m 12s", "artDisplay": "1m 51s", "ticketsPerHr": 8.24, "messagesPerHr": 21.81, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Maricar", "csat": 4.62, "qa": 33.3, "ha": 0.63, "tickets": 107, "messages": 238, "frtMin": 11.033333333333333, "artMin": 10.85, "frtDisplay": "11m 02s", "artDisplay": "10m 51s", "ticketsPerHr": 4.29, "messagesPerHr": 9.53, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Lei", "csat": 4.71, "qa": 50.0, "ha": 0.88, "tickets": 247, "messages": 678, "frtMin": 0.0, "artMin": 1.15, "frtDisplay": "40s", "artDisplay": "1m 09s", "ticketsPerHr": 9.36, "messagesPerHr": 25.47, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 16, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Krisha", "csat": 5.0, "qa": 50.0, "ha": 0.62, "tickets": 64, "messages": 158, "frtMin": 2.6333333333333333, "artMin": 5.533333333333333, "frtDisplay": "2m 38s", "artDisplay": "5m 32s", "ticketsPerHr": 4.63, "messagesPerHr": 11.42, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Justine", "csat": 4.29, "qa": 39.7, "ha": 0.5, "tickets": 208, "messages": 452, "frtMin": 3.1, "artMin": 5.633333333333333, "frtDisplay": "3m 06s", "artDisplay": "5m 38s", "ticketsPerHr": 7.85, "messagesPerHr": 16.75, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Jude", "csat": 4.4, "qa": 37.0, "ha": 0.82, "tickets": 240, "messages": 444, "frtMin": 6.883333333333333, "artMin": 7.433333333333334, "frtDisplay": "6m 53s", "artDisplay": "7m 26s", "ticketsPerHr": 10.19, "messagesPerHr": 18.36, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Jordan", "csat": 3.77, "qa": 45.0, "ha": 0.68, "tickets": 247, "messages": 440, "frtMin": 11.866666666666667, "artMin": 15.816666666666666, "frtDisplay": "11m 52s", "artDisplay": "15m 49s", "ticketsPerHr": 7.63, "messagesPerHr": 12.84, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 2, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Jesthel", "csat": 3.78, "qa": 42.3, "ha": 0.59, "tickets": 187, "messages": 344, "frtMin": 6.9, "artMin": 8.533333333333333, "frtDisplay": "6m 54s", "artDisplay": "8m 32s", "ticketsPerHr": 9.39, "messagesPerHr": 17.41, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Jerel", "csat": 4.2, "qa": 27.3, "ha": 0.81, "tickets": 150, "messages": 431, "frtMin": 1.1666666666666667, "artMin": 1.9833333333333334, "frtDisplay": "1m 10s", "artDisplay": "1m 59s", "ticketsPerHr": 5.63, "messagesPerHr": 17.16, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Earl", "csat": 5.0, "qa": 24.0, "ha": 0.86, "tickets": 207, "messages": 497, "frtMin": 4.8, "artMin": 7.016666666666667, "frtDisplay": "4m 48s", "artDisplay": "7m 01s", "ticketsPerHr": 6.21, "messagesPerHr": 14.64, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 1, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Carla", "csat": 4.5, "qa": 33.3, "ha": 0.83, "tickets": 106, "messages": 262, "frtMin": 1.9333333333333333, "artMin": 4.466666666666667, "frtDisplay": "1m 56s", "artDisplay": "4m 28s", "ticketsPerHr": 4.41, "messagesPerHr": 9.87, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Angelo", "csat": 4.3, "qa": 20.0, "ha": 0.82, "tickets": 258, "messages": 510, "frtMin": 5.066666666666666, "artMin": 5.85, "frtDisplay": "5m 04s", "artDisplay": "5m 51s", "ticketsPerHr": 8.67, "messagesPerHr": 17.16, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Denver", "csat": 5.0, "qa": 44.7, "ha": 0.61, "tickets": 130, "messages": 218, "frtMin": 140.0, "artMin": 24.133333333333333, "frtDisplay": "2h 20m", "artDisplay": "24m 08s", "ticketsPerHr": 7.99, "messagesPerHr": 13.82, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 25, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Christian", "csat": 4.2, "qa": null, "ha": 0.69, "tickets": 51, "messages": 84, "frtMin": 7.916666666666667, "artMin": 9.383333333333333, "frtDisplay": "7m 55s", "artDisplay": "9m 23s", "ticketsPerHr": 1.78, "messagesPerHr": 3.1, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "April - W5", "month": "April", "week": "W5", "dateRange": "April 27 - May 3", "agent": "Luzel", "csat": 5.0, "qa": 50.0, "ha": 0.77, "tickets": 58, "messages": 115, "frtMin": 7.833333333333333, "artMin": 12.15, "frtDisplay": "7m 50s", "artDisplay": "12m 09s", "ticketsPerHr": 3.59, "messagesPerHr": 7.11, "ticketsTarget": 102.0625, "messagesTarget": 325.0625, "tphTarget": 2.5515625, "mphTarget": 8.1265625, "bwDeleted": 37, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Zia", "csat": 4.64, "qa": 44.7, "ha": 0.71, "tickets": 131, "messages": 308, "frtMin": 1.9833333333333334, "artMin": 5.0, "frtDisplay": "1m 59s", "artDisplay": "5m", "ticketsPerHr": 6.61, "messagesPerHr": 15.53, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 14, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Sandra", "csat": 4.5, "qa": 50.0, "ha": 0.72, "tickets": 91, "messages": 240, "frtMin": 1.6666666666666665, "artMin": 7.566666666666666, "frtDisplay": "1m 40s", "artDisplay": "7m 34s", "ticketsPerHr": 4.56, "messagesPerHr": 12.02, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 2, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Nina", "csat": 4.67, "qa": 43.3, "ha": 0.84, "tickets": 62, "messages": 174, "frtMin": 1.1166666666666667, "artMin": 4.4, "frtDisplay": "1m 07s", "artDisplay": "4m 24s", "ticketsPerHr": 3.57, "messagesPerHr": 10.02, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 7, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Mary", "csat": 4.87, "qa": 50.0, "ha": 0.57, "tickets": 164, "messages": 428, "frtMin": 1.1166666666666667, "artMin": 1.6833333333333333, "frtDisplay": "1m 07s", "artDisplay": "1m 41s", "ticketsPerHr": 7.29, "messagesPerHr": 19.03, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 1, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Maricar", "csat": 4.64, "qa": 48.7, "ha": 0.7, "tickets": 93, "messages": 217, "frtMin": 9.316666666666666, "artMin": 9.533333333333333, "frtDisplay": "9m 19s", "artDisplay": "9m 32s", "ticketsPerHr": 3.58, "messagesPerHr": 8.34, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 2, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Lei", "csat": 4.92, "qa": 48.0, "ha": 0.86, "tickets": 190, "messages": 486, "frtMin": 0.0, "artMin": 1.2166666666666668, "frtDisplay": "43s", "artDisplay": "1m 13s", "ticketsPerHr": 8.94, "messagesPerHr": 22.87, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 15, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Krisha", "csat": 4.33, "qa": 50.0, "ha": 0.62, "tickets": 86, "messages": 250, "frtMin": 1.8166666666666667, "artMin": 4.883333333333333, "frtDisplay": "1m 49s", "artDisplay": "4m 53s", "ticketsPerHr": 3.86, "messagesPerHr": 11.22, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Justine", "csat": 4.42, "qa": 33.3, "ha": 0.36, "tickets": 135, "messages": 273, "frtMin": 2.2333333333333334, "artMin": 5.65, "frtDisplay": "2m 14s", "artDisplay": "5m 39s", "ticketsPerHr": 6.63, "messagesPerHr": 13.4, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Jude", "csat": 4.4, "qa": 9.7, "ha": 0.78, "tickets": 247, "messages": 416, "frtMin": 6.3, "artMin": 6.8, "frtDisplay": "6m 18s", "artDisplay": "6m 48s", "ticketsPerHr": 8.7, "messagesPerHr": 14.65, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 4, "bwReplied": 2, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Jordan", "csat": 4.93, "qa": 40.3, "ha": 0.62, "tickets": 202, "messages": 343, "frtMin": 12.15, "artMin": 15.8, "frtDisplay": "12m 09s", "artDisplay": "15m 48s", "ticketsPerHr": 6.83, "messagesPerHr": 11.6, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 5, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Jesthel", "csat": 5.0, "qa": 31.0, "ha": 0.71, "tickets": 161, "messages": 315, "frtMin": 5.516666666666667, "artMin": 5.566666666666666, "frtDisplay": "5m 31s", "artDisplay": "5m 34s", "ticketsPerHr": 6.87, "messagesPerHr": 13.45, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Jerel", "csat": 4.84, "qa": 39.0, "ha": 0.81, "tickets": 133, "messages": 401, "frtMin": 1.2333333333333334, "artMin": 1.85, "frtDisplay": "1m 14s", "artDisplay": "1m 51s", "ticketsPerHr": 5.67, "messagesPerHr": 17.09, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 5, "bwReplied": 13, "bwDm": 10, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Earl", "csat": 4.58, "qa": 24.7, "ha": 0.87, "tickets": 177, "messages": 397, "frtMin": 3.55, "artMin": 5.316666666666666, "frtDisplay": "3m 33s", "artDisplay": "5m 19s", "ticketsPerHr": 7.16, "messagesPerHr": 16.05, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 2, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Carla", "csat": 4.33, "qa": 47.3, "ha": 0.83, "tickets": 88, "messages": 207, "frtMin": 3.966666666666667, "artMin": 7.583333333333333, "frtDisplay": "3m 58s", "artDisplay": "7m 35s", "ticketsPerHr": 4.32, "messagesPerHr": 10.17, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Angelo", "csat": 4.52, "qa": 42.7, "ha": 0.81, "tickets": 194, "messages": 435, "frtMin": 4.85, "artMin": 6.1, "frtDisplay": "4m 51s", "artDisplay": "6m 06s", "ticketsPerHr": 8.22, "messagesPerHr": 18.42, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 4, "bwReplied": 1, "bwDm": 13, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Denver", "csat": 5.0, "qa": 49.7, "ha": 0.55, "tickets": 112, "messages": 187, "frtMin": 158.0, "artMin": 29.666666666666668, "frtDisplay": "2h 38m", "artDisplay": "29m 40s", "ticketsPerHr": 7.84, "messagesPerHr": 13.09, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 36, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Christian", "csat": 5.0, "qa": null, "ha": 0.66, "tickets": 16, "messages": 22, "frtMin": 5.666666666666667, "artMin": 8.15, "frtDisplay": "5m 40s", "artDisplay": "8m 09s", "ticketsPerHr": 0.76, "messagesPerHr": 1.04, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W1", "month": "May", "week": "W1", "dateRange": "May 4 - May 10", "agent": "Luzel", "csat": 5.0, "qa": 50.0, "ha": 0.7, "tickets": 38, "messages": 75, "frtMin": 9.116666666666667, "artMin": 10.366666666666667, "frtDisplay": "9m 07s", "artDisplay": "10m 22s", "ticketsPerHr": 4.8, "messagesPerHr": 2.43, "ticketsTarget": 101.375, "messagesTarget": 313.875, "tphTarget": 2.534375, "mphTarget": 7.846875, "bwDeleted": 17, "bwReplied": 0, "bwDm": 1, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Zia", "csat": 5.0, "qa": 43.3, "ha": 0.7, "tickets": 120, "messages": 268, "frtMin": 1.5666666666666667, "artMin": 5.783333333333333, "frtDisplay": "1m 34s", "artDisplay": "5m 47s", "ticketsPerHr": 6.93, "messagesPerHr": 15.48, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 6, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Sandra", "csat": 5.0, "qa": 49.0, "ha": 0.72, "tickets": 82, "messages": 218, "frtMin": 4.65, "artMin": 9.766666666666667, "frtDisplay": "4m 39s", "artDisplay": "9m 46s", "ticketsPerHr": 4.07, "messagesPerHr": 10.82, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Nina", "csat": 5.0, "qa": 50.0, "ha": 0.79, "tickets": 70, "messages": 152, "frtMin": 1.0833333333333333, "artMin": 4.116666666666666, "frtDisplay": "1m 05s", "artDisplay": "4m 07s", "ticketsPerHr": 5.79, "messagesPerHr": 12.57, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 10, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Mary", "csat": 4.31, "qa": 44.7, "ha": 0.58, "tickets": 132, "messages": 359, "frtMin": 0.0, "artMin": 1.6666666666666665, "frtDisplay": "55s", "artDisplay": "1m 40s", "ticketsPerHr": 7.35, "messagesPerHr": 19.98, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 34, "bwReplied": 0, "bwDm": 1, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Maricar", "csat": 4.79, "qa": 44.0, "ha": 0.69, "tickets": 128, "messages": 302, "frtMin": 5.8, "artMin": 8.316666666666666, "frtDisplay": "5m 48s", "artDisplay": "8m 19s", "ticketsPerHr": 4.42, "messagesPerHr": 10.43, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Lei", "csat": 4.27, "qa": 47.0, "ha": 0.86, "tickets": 149, "messages": 433, "frtMin": 0.0, "artMin": 1.1, "frtDisplay": "39s", "artDisplay": "1m 06s", "ticketsPerHr": 7.31, "messagesPerHr": 21.24, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 21, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Krisha", "csat": 4.0, "qa": 45.0, "ha": 0.64, "tickets": 115, "messages": 300, "frtMin": 2.216666666666667, "artMin": 5.35, "frtDisplay": "2m 13s", "artDisplay": "5m 21s", "ticketsPerHr": 4.33, "messagesPerHr": 11.3, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Justine", "csat": 4.87, "qa": 50.0, "ha": 0.41, "tickets": 133, "messages": 266, "frtMin": 2.783333333333333, "artMin": 5.683333333333334, "frtDisplay": "2m 47s", "artDisplay": "5m 41s", "ticketsPerHr": 5.67, "messagesPerHr": 11.34, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Jude", "csat": 4.26, "qa": 31.0, "ha": 0.78, "tickets": 269, "messages": 479, "frtMin": 6.733333333333333, "artMin": 7.0, "frtDisplay": "6m 44s", "artDisplay": "7m", "ticketsPerHr": 10.9, "messagesPerHr": 19.4, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 25, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Jordan", "csat": 3.5, "qa": 42.7, "ha": 0.6, "tickets": 167, "messages": 305, "frtMin": 10.366666666666667, "artMin": 12.766666666666667, "frtDisplay": "10m 22s", "artDisplay": "12m 46s", "ticketsPerHr": 6.44, "messagesPerHr": 11.77, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 1, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Jesthel", "csat": 3.78, "qa": 21.7, "ha": 0.7, "tickets": 127, "messages": 229, "frtMin": 6.7, "artMin": 7.933333333333334, "frtDisplay": "6m 42s", "artDisplay": "7m 56s", "ticketsPerHr": 6.07, "messagesPerHr": 10.94, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Jerel", "csat": 5.0, "qa": 36.7, "ha": 0.79, "tickets": 129, "messages": 351, "frtMin": 1.9333333333333333, "artMin": 2.4166666666666665, "frtDisplay": "1m 56s", "artDisplay": "2m 25s", "ticketsPerHr": 5.76, "messagesPerHr": 15.66, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 23, "bwReplied": 6, "bwDm": 3, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Earl", "csat": 4.55, "qa": 36.3, "ha": 0.87, "tickets": 176, "messages": 399, "frtMin": 3.2666666666666666, "artMin": 5.3, "frtDisplay": "3m 16s", "artDisplay": "5m 18s", "ticketsPerHr": 6.73, "messagesPerHr": 15.26, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 3, "bwReplied": 2, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Carla", "csat": 4.8, "qa": 50.0, "ha": 0.86, "tickets": 94, "messages": 256, "frtMin": 1.0333333333333334, "artMin": 3.8166666666666664, "frtDisplay": "1m 02s", "artDisplay": "3m 49s", "ticketsPerHr": 4.23, "messagesPerHr": 11.52, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Angelo", "csat": 4.36, "qa": 36.3, "ha": 0.78, "tickets": 164, "messages": 383, "frtMin": 3.7666666666666666, "artMin": 5.45, "frtDisplay": "3m 46s", "artDisplay": "5m 27s", "ticketsPerHr": 7.34, "messagesPerHr": 17.15, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 2, "bwReplied": 2, "bwDm": 6, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Denver", "csat": 5.0, "qa": 45.0, "ha": 0.5, "tickets": 58, "messages": 97, "frtMin": 5.1, "artMin": 5.15, "frtDisplay": "5m 06s", "artDisplay": "5m 09s", "ticketsPerHr": 4.54, "messagesPerHr": 7.6, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 66, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Christian", "csat": 3.4, "qa": 0.0, "ha": 0.68, "tickets": 17, "messages": 24, "frtMin": 7.1, "artMin": 7.916666666666667, "frtDisplay": "7m 06s", "artDisplay": "7m 55s", "ticketsPerHr": 0.76, "messagesPerHr": 1.08, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W2", "month": "May", "week": "W2", "dateRange": "May 11 - May 17", "agent": "Luzel", "csat": 5.0, "qa": 50.0, "ha": 0.68, "tickets": 40, "messages": 66, "frtMin": 9.5, "artMin": 10.55, "frtDisplay": "9m 30s", "artDisplay": "10m 33s", "ticketsPerHr": 2.86, "messagesPerHr": 4.72, "ticketsTarget": 93.5, "messagesTarget": 297.6875, "tphTarget": 2.3375, "mphTarget": 7.4421875, "bwDeleted": 8, "bwReplied": 0, "bwDm": 2, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Zia", "csat": 4.83, "qa": 43.3, "ha": 0.67, "tickets": 138, "messages": 325, "frtMin": 1.45, "artMin": 4.0, "frtDisplay": "1m 27s", "artDisplay": "4m", "ticketsPerHr": 6.14, "messagesPerHr": 14.45, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 12, "bwReplied": 10, "bwDm": 1, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Sandra", "csat": 4.18, "qa": 49.0, "ha": 0.7, "tickets": 84, "messages": 213, "frtMin": 3.4833333333333334, "artMin": 5.483333333333333, "frtDisplay": "3m 29s", "artDisplay": "5m 29s", "ticketsPerHr": 4.86, "messagesPerHr": 12.33, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 10, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Nina", "csat": 4.33, "qa": 50.0, "ha": 0.83, "tickets": 118, "messages": 259, "frtMin": 1.5166666666666666, "artMin": 3.85, "frtDisplay": "1m 31s", "artDisplay": "3m 51s", "ticketsPerHr": 7.06, "messagesPerHr": 15.49, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Mary", "csat": 4.44, "qa": 49.0, "ha": 0.54, "tickets": 127, "messages": 360, "frtMin": 1.1166666666666667, "artMin": 1.75, "frtDisplay": "1m 07s", "artDisplay": "1m 45s", "ticketsPerHr": 5.81, "messagesPerHr": 16.48, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 17, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Maricar", "csat": 5.0, "qa": 37.7, "ha": 0.68, "tickets": 109, "messages": 310, "frtMin": 1.95, "artMin": 3.5, "frtDisplay": "1m 57s", "artDisplay": "3m 30s", "ticketsPerHr": 3.64, "messagesPerHr": 10.36, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 10, "bwReplied": 7, "bwDm": 1, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Lei", "csat": 4.89, "qa": 49.0, "ha": 0.85, "tickets": 184, "messages": 434, "frtMin": 0.0, "artMin": 1.55, "frtDisplay": "55s", "artDisplay": "1m 33s", "ticketsPerHr": 8.85, "messagesPerHr": 20.88, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 72, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Krisha", "csat": 3.67, "qa": 49.0, "ha": 0.71, "tickets": 143, "messages": 334, "frtMin": 3.5666666666666664, "artMin": 5.0, "frtDisplay": "3m 34s", "artDisplay": "5m", "ticketsPerHr": 5.78, "messagesPerHr": 13.5, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 2, "bwReplied": 2, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Justine", "csat": 4.1, "qa": 37.3, "ha": 0.33, "tickets": 101, "messages": 247, "frtMin": 3.3666666666666667, "artMin": 5.9, "frtDisplay": "3m 22s", "artDisplay": "5m 54s", "ticketsPerHr": 3.89, "messagesPerHr": 9.52, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Jude", "csat": 4.21, "qa": 42.3, "ha": 0.7, "tickets": 196, "messages": 341, "frtMin": 8.55, "artMin": 8.516666666666667, "frtDisplay": "8m 33s", "artDisplay": "8m 31s", "ticketsPerHr": 6.44, "messagesPerHr": 11.2, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 11, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Jordan", "csat": 5.0, "qa": 24.7, "ha": 0.62, "tickets": 106, "messages": 193, "frtMin": 11.533333333333333, "artMin": 12.033333333333333, "frtDisplay": "11m 32s", "artDisplay": "12m 02s", "ticketsPerHr": 6.0, "messagesPerHr": 10.92, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 16, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Jesthel", "csat": 3.7, "qa": 37.3, "ha": 0.81, "tickets": 145, "messages": 276, "frtMin": 4.983333333333333, "artMin": 6.166666666666667, "frtDisplay": "4m 59s", "artDisplay": "6m 10s", "ticketsPerHr": 6.26, "messagesPerHr": 11.92, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 166, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Jerel", "csat": 4.88, "qa": 35.7, "ha": 0.81, "tickets": 107, "messages": 292, "frtMin": 2.2333333333333334, "artMin": 2.8833333333333333, "frtDisplay": "2m 14s", "artDisplay": "2m 53s", "ticketsPerHr": 6.39, "messagesPerHr": 17.43, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 3, "bwReplied": 7, "bwDm": 5, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Earl", "csat": 4.8, "qa": 40.7, "ha": 0.83, "tickets": 164, "messages": 328, "frtMin": 6.466666666666667, "artMin": 6.416666666666667, "frtDisplay": "6m 28s", "artDisplay": "6m 25s", "ticketsPerHr": 6.43, "messagesPerHr": 12.85, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 10, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Carla", "csat": 5.0, "qa": 47.3, "ha": 0.82, "tickets": 70, "messages": 195, "frtMin": 1.0833333333333333, "artMin": 2.4833333333333334, "frtDisplay": "1m 05s", "artDisplay": "2m 29s", "ticketsPerHr": 4.02, "messagesPerHr": 11.19, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 26, "bwReplied": 7, "bwDm": 12, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Angelo", "csat": 4.86, "qa": 46.0, "ha": 0.79, "tickets": 149, "messages": 364, "frtMin": 2.4333333333333336, "artMin": 4.883333333333333, "frtDisplay": "2m 26s", "artDisplay": "4m 53s", "ticketsPerHr": 5.66, "messagesPerHr": 13.83, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Denver", "csat": 0.0, "qa": 33.3, "ha": 0.51, "tickets": 45, "messages": 75, "frtMin": 7.316666666666666, "artMin": 6.266666666666667, "frtDisplay": "7m 19s", "artDisplay": "6m 16s", "ticketsPerHr": 4.04, "messagesPerHr": 6.73, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 16, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Christian", "csat": 3.67, "qa": 0.0, "ha": 0.69, "tickets": 38, "messages": 51, "frtMin": 10.5, "artMin": 13.7, "frtDisplay": "10m 30s", "artDisplay": "13m 42s", "ticketsPerHr": 1.78, "messagesPerHr": 2.39, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W3", "month": "May", "week": "W3", "dateRange": "May 18 - May 24", "agent": "Luzel", "csat": 5.0, "qa": 50.0, "ha": 0.63, "tickets": 21, "messages": 35, "frtMin": 4.616666666666667, "artMin": 9.983333333333333, "frtDisplay": "4m 37s", "artDisplay": "9m 59s", "ticketsPerHr": 2.36, "messagesPerHr": 3.94, "ticketsTarget": 97.4, "messagesTarget": 302.8666667, "tphTarget": 2.435, "mphTarget": 7.571666667, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Zia", "csat": 4.6, "qa": 45.0, "ha": 0.69, "tickets": 139, "messages": 297, "frtMin": 1.5666666666666667, "artMin": 2.7333333333333334, "frtDisplay": "1m 34s", "artDisplay": "2m 44s", "ticketsPerHr": 7.4, "messagesPerHr": 15.81, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 11, "bwReplied": 0, "bwDm": 2, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Sandra", "csat": 4.55, "qa": 43.3, "ha": 0.69, "tickets": 112, "messages": 282, "frtMin": 6.4, "artMin": 8.383333333333333, "frtDisplay": "6m 24s", "artDisplay": "8m 23s", "ticketsPerHr": 5.18, "messagesPerHr": 13.05, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 14, "bwReplied": 1, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Nina", "csat": 5.0, "qa": 50.0, "ha": 0.82, "tickets": 124, "messages": 311, "frtMin": 1.3666666666666667, "artMin": 5.716666666666667, "frtDisplay": "1m 22s", "artDisplay": "5m 43s", "ticketsPerHr": 6.64, "messagesPerHr": 16.65, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Mary", "csat": 4.83, "qa": 43.3, "ha": 0.57, "tickets": 123, "messages": 345, "frtMin": 1.0166666666666666, "artMin": 1.4, "frtDisplay": "1m 01s", "artDisplay": "1m 24s", "ticketsPerHr": 4.62, "messagesPerHr": 12.95, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 5, "bwReplied": 7, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Maricar", "csat": 4.77, "qa": 28.3, "ha": 0.68, "tickets": 144, "messages": 389, "frtMin": 2.283333333333333, "artMin": 3.65, "frtDisplay": "2m 17s", "artDisplay": "3m 39s", "ticketsPerHr": 4.11, "messagesPerHr": 11.1, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 1, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Lei", "csat": 4.33, "qa": 45.0, "ha": 0.85, "tickets": 154, "messages": 398, "frtMin": 0.0, "artMin": 1.9833333333333334, "frtDisplay": "47s", "artDisplay": "1m 59s", "ticketsPerHr": 6.98, "messagesPerHr": 18.03, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 56, "bwReplied": 9, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Krisha", "csat": 4.14, "qa": 49.0, "ha": 0.69, "tickets": 133, "messages": 309, "frtMin": 2.1, "artMin": 4.9, "frtDisplay": "2m 06s", "artDisplay": "4m 54s", "ticketsPerHr": 5.73, "messagesPerHr": 13.32, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 7, "bwReplied": 4, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Jude", "csat": 4.77, "qa": 40.0, "ha": 0.66, "tickets": 202, "messages": 335, "frtMin": 10.616666666666667, "artMin": 10.866666666666667, "frtDisplay": "10m 37s", "artDisplay": "10m 52s", "ticketsPerHr": 7.49, "messagesPerHr": 12.42, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 11, "bwReplied": 9, "bwDm": 1, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Jordan", "csat": 4.64, "qa": 42.3, "ha": 0.59, "tickets": 161, "messages": 310, "frtMin": 9.533333333333333, "artMin": 12.916666666666666, "frtDisplay": "9m 32s", "artDisplay": "12m 55s", "ticketsPerHr": 6.28, "messagesPerHr": 12.09, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 1, "bwReplied": 23, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Jesthel", "csat": 5.0, "qa": 43.0, "ha": 0.86, "tickets": 145, "messages": 243, "frtMin": 4.75, "artMin": 5.366666666666666, "frtDisplay": "4m 45s", "artDisplay": "5m 22s", "ticketsPerHr": 9.2, "messagesPerHr": 15.42, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 18, "bwReplied": 50, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Jerel", "csat": 4.78, "qa": 41.3, "ha": 0.79, "tickets": 146, "messages": 343, "frtMin": 2.3833333333333333, "artMin": 2.6833333333333336, "frtDisplay": "2m 23s", "artDisplay": "2m 41s", "ticketsPerHr": 6.65, "messagesPerHr": 15.62, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 43, "bwReplied": 0, "bwDm": 8, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Earl", "csat": 4.56, "qa": 39.0, "ha": 0.82, "tickets": 209, "messages": 397, "frtMin": 6.833333333333333, "artMin": 7.166666666666667, "frtDisplay": "6m 50s", "artDisplay": "7m 10s", "ticketsPerHr": 7.71, "messagesPerHr": 14.65, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 10, "bwReplied": 2, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Carla", "csat": 5.0, "qa": 47.3, "ha": 0.82, "tickets": 102, "messages": 263, "frtMin": 0.0, "artMin": 2.1666666666666665, "frtDisplay": "51s", "artDisplay": "2m 10s", "ticketsPerHr": 6.09, "messagesPerHr": 15.71, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 11, "bwReplied": 21, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Angelo", "csat": 3.9, "qa": 39.7, "ha": 0.8, "tickets": 136, "messages": 324, "frtMin": 2.7, "artMin": 6.316666666666666, "frtDisplay": "2m 42s", "artDisplay": "6m 19s", "ticketsPerHr": 5.8, "messagesPerHr": 13.81, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 2, "bwReplied": 7, "bwDm": 16, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Denver", "csat": 0.0, "qa": 0.0, "ha": 0.42, "tickets": 24, "messages": 25, "frtMin": 12.566666666666666, "artMin": 44.38333333333333, "frtDisplay": "12m 34s", "artDisplay": "44m 23s", "ticketsPerHr": 4.12, "messagesPerHr": 4.29, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 10, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Christian", "csat": 0.0, "qa": 0.0, "ha": 0.69, "tickets": 0, "messages": 0, "frtMin": 0.0, "artMin": 29.283333333333335, "frtDisplay": "0", "artDisplay": "29m 17s", "ticketsPerHr": 0.0, "messagesPerHr": 0.0, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "May - W4", "month": "May", "week": "W4", "dateRange": "May 25 - May 31", "agent": "Luzel", "csat": 0.0, "qa": 0.0, "ha": 0.69, "tickets": 8, "messages": 13, "frtMin": null, "artMin": 12.566666666666666, "frtDisplay": "", "artDisplay": "12m 34s", "ticketsPerHr": 1.17, "messagesPerHr": 1.9, "ticketsTarget": 98.86666667, "messagesTarget": 311.6666667, "tphTarget": 2.471666667, "mphTarget": 7.791666667, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Zia", "csat": 4.73, "qa": 43.3, "ha": 0.7, "tickets": 139, "messages": 327, "frtMin": 1.2, "artMin": 3.2333333333333334, "frtDisplay": "1m 12s", "artDisplay": "3m 14s", "ticketsPerHr": 6.44, "messagesPerHr": 15.16, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 9, "bwReplied": 0, "bwDm": 1, "shopifyAlerts": 1}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Sandra", "csat": 4.75, "qa": 50.0, "ha": 0.68, "tickets": 115, "messages": 307, "frtMin": 6.3, "artMin": 10.016666666666667, "frtDisplay": "6m 18s", "artDisplay": "10m 01s", "ticketsPerHr": 5.25, "messagesPerHr": 14.02, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 50, "bwReplied": 10, "bwDm": 0, "shopifyAlerts": 8}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Nina", "csat": 4.43, "qa": 40.3, "ha": 0.86, "tickets": 128, "messages": 297, "frtMin": 1.7833333333333332, "artMin": 5.7, "frtDisplay": "1m 47s", "artDisplay": "5m 42s", "ticketsPerHr": 6.63, "messagesPerHr": 15.38, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 15, "bwReplied": 1, "bwDm": 1, "shopifyAlerts": 0}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Mary", "csat": 4.57, "qa": 46.7, "ha": 0.59, "tickets": 163, "messages": 436, "frtMin": 1.0666666666666667, "artMin": 1.4666666666666668, "frtDisplay": "1m 04s", "artDisplay": "1m 28s", "ticketsPerHr": 6.24, "messagesPerHr": 16.7, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 2, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 19}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Maricar", "csat": 3.29, "qa": 46.7, "ha": 0.68, "tickets": 139, "messages": 347, "frtMin": 2.0166666666666666, "artMin": 3.85, "frtDisplay": "2m 01s", "artDisplay": "3m 51s", "ticketsPerHr": 4.36, "messagesPerHr": 10.89, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 43, "bwReplied": 5, "bwDm": 1, "shopifyAlerts": 30}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Lei", "csat": 4.3, "qa": 50.0, "ha": 0.83, "tickets": 99, "messages": 226, "frtMin": 0.0, "artMin": 2.0166666666666666, "frtDisplay": "43s", "artDisplay": "2m 01s", "ticketsPerHr": 5.97, "messagesPerHr": 13.63, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 9, "bwReplied": 0, "bwDm": 1, "shopifyAlerts": 9}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Krisha", "csat": 5.0, "qa": 50.0, "ha": 0.72, "tickets": 134, "messages": 315, "frtMin": 2.5166666666666666, "artMin": 5.283333333333333, "frtDisplay": "2m 31s", "artDisplay": "5m 17s", "ticketsPerHr": 6.18, "messagesPerHr": 14.52, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 3}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Jude", "csat": 5.0, "qa": 35.7, "ha": 0.68, "tickets": 127, "messages": 207, "frtMin": 9.216666666666667, "artMin": 10.366666666666667, "frtDisplay": "9m 13s", "artDisplay": "10m 22s", "ticketsPerHr": 7.21, "messagesPerHr": 11.75, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 13, "bwReplied": 4, "bwDm": 0, "shopifyAlerts": 9}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Jordan", "csat": 4.69, "qa": 38.3, "ha": 0.68, "tickets": 113, "messages": 227, "frtMin": 9.766666666666667, "artMin": 11.783333333333333, "frtDisplay": "9m 46s", "artDisplay": "11m 47s", "ticketsPerHr": 5.82, "messagesPerHr": 11.69, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 2, "bwReplied": 11, "bwDm": 0, "shopifyAlerts": 2}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Jesthel", "csat": 5.0, "qa": 37.3, "ha": 0.84, "tickets": 141, "messages": 229, "frtMin": 3.75, "artMin": 4.733333333333333, "frtDisplay": "3m 45s", "artDisplay": "4m 44s", "ticketsPerHr": 7.52, "messagesPerHr": 12.21, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 9, "bwReplied": 91, "bwDm": 0, "shopifyAlerts": 8}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Jerel", "csat": 4.5, "qa": 37.7, "ha": 0.83, "tickets": 120, "messages": 328, "frtMin": 2.3, "artMin": 2.8, "frtDisplay": "2m 18s", "artDisplay": "2m 48s", "ticketsPerHr": 6.18, "messagesPerHr": 16.89, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 212, "bwReplied": 1, "bwDm": 6, "shopifyAlerts": 6}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Earl", "csat": 4.64, "qa": 31.7, "ha": 0.8, "tickets": 163, "messages": 336, "frtMin": 8.85, "artMin": 9.016666666666667, "frtDisplay": "8m 51s", "artDisplay": "9m 01s", "ticketsPerHr": 5.59, "messagesPerHr": 11.53, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 19, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 10}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Carla", "csat": 4.38, "qa": 40.0, "ha": 0.8, "tickets": 130, "messages": 321, "frtMin": 1.4666666666666668, "artMin": 3.4, "frtDisplay": "1m 28s", "artDisplay": "3m 24s", "ticketsPerHr": 6.58, "messagesPerHr": 16.24, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 48, "bwReplied": 37, "bwDm": 0, "shopifyAlerts": 8}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Angelo", "csat": 4.25, "qa": 47.3, "ha": 0.81, "tickets": 141, "messages": 305, "frtMin": 2.466666666666667, "artMin": 6.433333333333334, "frtDisplay": "2m 28s", "artDisplay": "6m 26s", "ticketsPerHr": 5.96, "messagesPerHr": 12.9, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 4, "bwReplied": 12, "bwDm": 11, "shopifyAlerts": 8}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Denver", "csat": 5.0, "qa": 0.0, "ha": 0.48, "tickets": 31, "messages": 50, "frtMin": 1.75, "artMin": 6.133333333333334, "frtDisplay": "1m 45s", "artDisplay": "6m 08s", "ticketsPerHr": 3.63, "messagesPerHr": 5.85, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 2, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 7}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Christian", "csat": 0.0, "qa": 0.0, "ha": 0.71, "tickets": 0, "messages": 0, "frtMin": 0.0, "artMin": 117.0, "frtDisplay": "0", "artDisplay": "1h 57m", "ticketsPerHr": 0.0, "messagesPerHr": 0.0, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "June - W1", "month": "June", "week": "W1", "dateRange": "June 1 - June 7", "agent": "Luzel", "csat": 0.0, "qa": 0.0, "ha": 0.61, "tickets": 11, "messages": 19, "frtMin": 0.0, "artMin": 11.433333333333334, "frtDisplay": "0", "artDisplay": "11m 26s", "ticketsPerHr": 1.42, "messagesPerHr": 2.46, "ticketsTarget": 86.0, "messagesTarget": 274.2, "tphTarget": 2.15, "mphTarget": 6.855, "bwDeleted": 1, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Zia", "csat": 4.5, "qa": 43.3, "ha": 0.67, "tickets": 96, "messages": 241, "frtMin": 1.5666666666666667, "artMin": 3.1, "frtDisplay": "1m 34s", "artDisplay": "3m 06s", "ticketsPerHr": 5.0, "messagesPerHr": 12.54, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 9, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 1}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Sandra", "csat": 3.67, "qa": 44.0, "ha": 0.65, "tickets": 99, "messages": 241, "frtMin": 4.15, "artMin": 7.633333333333333, "frtDisplay": "4m 09s", "artDisplay": "7m 38s", "ticketsPerHr": 5.11, "messagesPerHr": 12.43, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 13, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Nina", "csat": 3.82, "qa": 33.0, "ha": 0.88, "tickets": 94, "messages": 256, "frtMin": 1.2666666666666666, "artMin": 3.85, "frtDisplay": "1m 16s", "artDisplay": "3m 51s", "ticketsPerHr": 5.53, "messagesPerHr": 15.05, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Mary", "csat": 4.64, "qa": 46.7, "ha": 0.5, "tickets": 119, "messages": 267, "frtMin": 1.7333333333333334, "artMin": 2.4833333333333334, "frtDisplay": "1m 44s", "artDisplay": "2m 29s", "ticketsPerHr": 5.09, "messagesPerHr": 11.43, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 19, "bwReplied": 3, "bwDm": 0, "shopifyAlerts": 5}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Maricar", "csat": 4.17, "qa": 33.3, "ha": 0.65, "tickets": 106, "messages": 285, "frtMin": 1.6166666666666667, "artMin": 3.183333333333333, "frtDisplay": "1m 37s", "artDisplay": "3m 11s", "ticketsPerHr": 3.48, "messagesPerHr": 9.35, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 7, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 10}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Lei", "csat": 4.4, "qa": 33.3, "ha": 0.82, "tickets": 92, "messages": 233, "frtMin": 0.0, "artMin": 2.3833333333333333, "frtDisplay": "49s", "artDisplay": "2m 23s", "ticketsPerHr": 4.07, "messagesPerHr": 10.31, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 111, "bwReplied": 3, "bwDm": 1, "shopifyAlerts": 4}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Krisha", "csat": 4.8, "qa": 47.3, "ha": 0.66, "tickets": 122, "messages": 283, "frtMin": 2.2666666666666666, "artMin": 5.083333333333333, "frtDisplay": "2m 16s", "artDisplay": "5m 05s", "ticketsPerHr": 5.13, "messagesPerHr": 11.9, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 6, "bwReplied": 1, "bwDm": 0, "shopifyAlerts": 3}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Jude", "csat": 4.64, "qa": null, "ha": 0.75, "tickets": 128, "messages": 244, "frtMin": 6.266666666666667, "artMin": 7.833333333333333, "frtDisplay": "6m 16s", "artDisplay": "7m 50s", "ticketsPerHr": 5.07, "messagesPerHr": 9.67, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 16, "bwReplied": 6, "bwDm": 0, "shopifyAlerts": 4}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Jordan", "csat": 4.86, "qa": 44.7, "ha": 0.62, "tickets": 111, "messages": 265, "frtMin": 4.033333333333333, "artMin": 6.9, "frtDisplay": "4m 02s", "artDisplay": "6m 54s", "ticketsPerHr": 4.95, "messagesPerHr": 11.81, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 5}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Jesthel", "csat": 3.4, "qa": null, "ha": 0.82, "tickets": 109, "messages": 170, "frtMin": 5.283333333333333, "artMin": 4.9, "frtDisplay": "5m 17s", "artDisplay": "4m 54s", "ticketsPerHr": 8.61, "messagesPerHr": 13.43, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 10, "bwReplied": 149, "bwDm": 0, "shopifyAlerts": 8}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Jerel", "csat": 4.0, "qa": 47.3, "ha": 0.83, "tickets": 103, "messages": 281, "frtMin": 1.4166666666666667, "artMin": 2.45, "frtDisplay": "1m 25s", "artDisplay": "2m 27s", "ticketsPerHr": 5.01, "messagesPerHr": 13.68, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 33, "bwReplied": 1, "bwDm": 5, "shopifyAlerts": 18}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Earl", "csat": 4.45, "qa": null, "ha": 0.81, "tickets": 144, "messages": 324, "frtMin": 7.1, "artMin": 7.683333333333334, "frtDisplay": "7m 06s", "artDisplay": "7m 41s", "ticketsPerHr": 5.56, "messagesPerHr": 12.52, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 27, "bwReplied": 0, "bwDm": 1, "shopifyAlerts": 7}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Carla", "csat": 5.0, "qa": 50.0, "ha": 0.8, "tickets": 95, "messages": 254, "frtMin": 1.0666666666666667, "artMin": 2.8666666666666667, "frtDisplay": "1m 04s", "artDisplay": "2m 52s", "ticketsPerHr": 4.79, "messagesPerHr": 12.81, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 89, "bwReplied": 27, "bwDm": 0, "shopifyAlerts": 9}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Angelo", "csat": 5.0, "qa": 42.3, "ha": 0.78, "tickets": 76, "messages": 192, "frtMin": 1.7, "artMin": 5.016666666666667, "frtDisplay": "1m 42s", "artDisplay": "5m 01s", "ticketsPerHr": 4.33, "messagesPerHr": 10.95, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 4, "bwReplied": 7, "bwDm": 9, "shopifyAlerts": 15}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Denver", "csat": 5.0, "qa": 0.0, "ha": 0.51, "tickets": 19, "messages": 34, "frtMin": 1.0166666666666666, "artMin": 2.6333333333333333, "frtDisplay": "1m 01s", "artDisplay": "2m 38s", "ticketsPerHr": 1.62, "messagesPerHr": 2.9, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 4, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 2}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Christian", "csat": null, "qa": 0.0, "ha": 0.71, "tickets": 0, "messages": 0, "frtMin": 0.0, "artMin": 0.0, "frtDisplay": "0", "artDisplay": "0", "ticketsPerHr": 0.0, "messagesPerHr": 0.0, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 1}, {"monthWeek": "June - W2", "month": "June", "week": "W2", "dateRange": "June 8 - June 14", "agent": "Luzel", "csat": null, "qa": 0.0, "ha": 0.53, "tickets": 11, "messages": 15, "frtMin": 0.0, "artMin": 0.0, "frtDisplay": "0", "artDisplay": "0", "ticketsPerHr": 2.2, "messagesPerHr": 3.0, "ticketsTarget": 71.73333333, "messagesTarget": 235.0, "tphTarget": 1.793333333, "mphTarget": 5.875, "bwDeleted": 2, "bwReplied": 0, "bwDm": 1, "shopifyAlerts": 1}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Zia", "csat": 4.73, "qa": 40.0, "ha": 0.75, "tickets": 72, "messages": 179, "frtMin": 2.6666666666666665, "artMin": 3.3166666666666664, "frtDisplay": "2m 40s", "artDisplay": "3m 19s", "ticketsPerHr": 4.9, "messagesPerHr": 12.18, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 3, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Sandra", "csat": 4.75, "qa": 30.7, "ha": 0.82, "tickets": 118, "messages": 264, "frtMin": 11.55, "artMin": 11.833333333333334, "frtDisplay": "11m 33s", "artDisplay": "11m 50s", "ticketsPerHr": 6.1, "messagesPerHr": 13.65, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 4, "bwReplied": 0, "bwDm": 1, "shopifyAlerts": 1}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Nina", "csat": 4.43, "qa": 44.3, "ha": 0.69, "tickets": 113, "messages": 265, "frtMin": 1.8333333333333335, "artMin": 4.816666666666666, "frtDisplay": "1m 50s", "artDisplay": "4m 49s", "ticketsPerHr": 6.81, "messagesPerHr": 15.98, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 18, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Mary", "csat": 4.57, "qa": 30.3, "ha": 0.64, "tickets": 190, "messages": 392, "frtMin": 2.4333333333333336, "artMin": 2.1666666666666665, "frtDisplay": "2m 26s", "artDisplay": "2m 10s", "ticketsPerHr": 7.33, "messagesPerHr": 15.12, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 32, "bwReplied": 4, "bwDm": 0, "shopifyAlerts": 14}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Maricar", "csat": 3.29, "qa": 47.3, "ha": 0.79, "tickets": 126, "messages": 339, "frtMin": 1.7, "artMin": 3.216666666666667, "frtDisplay": "1m 42s", "artDisplay": "3m 13s", "ticketsPerHr": 4.63, "messagesPerHr": 12.45, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 25}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Lei", "csat": 4.3, "qa": 50.0, "ha": 0.79, "tickets": 122, "messages": 292, "frtMin": 0.0, "artMin": 1.6833333333333333, "frtDisplay": "53s", "artDisplay": "1m 41s", "ticketsPerHr": 6.26, "messagesPerHr": 14.99, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 10, "bwReplied": 2, "bwDm": 0, "shopifyAlerts": 14}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Krisha", "csat": 5.0, "qa": 50.0, "ha": 0.58, "tickets": 99, "messages": 225, "frtMin": 2.6833333333333336, "artMin": 4.65, "frtDisplay": "2m 41s", "artDisplay": "4m 39s", "ticketsPerHr": 5.08, "messagesPerHr": 11.54, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 13, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 1}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Jordan", "csat": 4.69, "qa": 40.7, "ha": 0.62, "tickets": 145, "messages": 330, "frtMin": 2.7666666666666666, "artMin": 7.983333333333333, "frtDisplay": "2m 46s", "artDisplay": "7m 59s", "ticketsPerHr": 4.2, "messagesPerHr": 9.56, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 68, "bwReplied": 0, "bwDm": 5, "shopifyAlerts": 2}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Jerel", "csat": 4.5, "qa": 46.3, "ha": 0.69, "tickets": 105, "messages": 268, "frtMin": 1.25, "artMin": 2.0, "frtDisplay": "1m 15s", "artDisplay": "2m", "ticketsPerHr": 4.71, "messagesPerHr": 12.01, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 35, "bwReplied": 13, "bwDm": 0, "shopifyAlerts": 18}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Carla", "csat": 4.38, "qa": 47.3, "ha": 0.56, "tickets": 107, "messages": 276, "frtMin": 1.7166666666666668, "artMin": 3.3, "frtDisplay": "1m 43s", "artDisplay": "3m 18s", "ticketsPerHr": 5.83, "messagesPerHr": 15.05, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 11}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Angelo", "csat": 4.25, "qa": 46.3, "ha": 0.55, "tickets": 132, "messages": 306, "frtMin": 1.2333333333333334, "artMin": 4.016666666666667, "frtDisplay": "1m 14s", "artDisplay": "4m 01s", "ticketsPerHr": 5.2, "messagesPerHr": 12.05, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 3, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 9}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Denver", "csat": 5.0, "qa": 47.3, "ha": 0.87, "tickets": 66, "messages": 94, "frtMin": 7.25, "artMin": 6.766666666666667, "frtDisplay": "7m 15s", "artDisplay": "6m 46s", "ticketsPerHr": 3.89, "messagesPerHr": 5.54, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 5, "bwReplied": 16, "bwDm": 4, "shopifyAlerts": 3}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Christian", "csat": null, "qa": null, "ha": 0.73, "tickets": 0, "messages": 0, "frtMin": 0.0, "artMin": 10.85, "frtDisplay": "0", "artDisplay": "10m 51s", "ticketsPerHr": 0.0, "messagesPerHr": 0.0, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 3, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "June - W3", "month": "June", "week": "W3", "dateRange": "June 15 - June 21", "agent": "Luzel", "csat": null, "qa": null, "ha": 0.66, "tickets": 5, "messages": 8, "frtMin": 0.0, "artMin": 11.8, "frtDisplay": "-", "artDisplay": "11m 48s", "ticketsPerHr": 0.71, "messagesPerHr": null, "ticketsTarget": 85.33333333, "messagesTarget": 265.1666667, "tphTarget": 2.133333333, "mphTarget": 6.629166667, "bwDeleted": 21, "bwReplied": 6, "bwDm": 2, "shopifyAlerts": 1}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Zia", "csat": 4.4, "qa": 44.7, "ha": 0.63, "tickets": 114, "messages": 292, "frtMin": 2.05, "artMin": 3.35, "frtDisplay": "2m 03s", "artDisplay": "3m 21s", "ticketsPerHr": 5.42, "messagesPerHr": 13.87, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 4, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 1}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Sandra", "csat": 5.0, "qa": 45.7, "ha": 0.74, "tickets": 68, "messages": 149, "frtMin": 4.616666666666667, "artMin": 9.2, "frtDisplay": "4m 37s", "artDisplay": "9m 12s", "ticketsPerHr": 5.42, "messagesPerHr": 11.88, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 9, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 6}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Nina", "csat": 3.92, "qa": 38.7, "ha": 0.86, "tickets": 112, "messages": 299, "frtMin": 1.7166666666666668, "artMin": 4.283333333333333, "frtDisplay": "1m 43s", "artDisplay": "4m 17s", "ticketsPerHr": 4.76, "messagesPerHr": 12.71, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 27, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Mary", "csat": 5.0, "qa": 37.7, "ha": 0.52, "tickets": 137, "messages": 278, "frtMin": 4.0, "artMin": 3.3333333333333335, "frtDisplay": "4m", "artDisplay": "3m 20s", "ticketsPerHr": 4.55, "messagesPerHr": 9.23, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 17, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 14}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Maricar", "csat": 4.91, "qa": 33.3, "ha": 0.63, "tickets": 122, "messages": 339, "frtMin": 1.6666666666666665, "artMin": 2.5, "frtDisplay": "1m 40s", "artDisplay": "2m 30s", "ticketsPerHr": 4.96, "messagesPerHr": 13.78, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 22}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Lei", "csat": 4.0, "qa": 42.3, "ha": 0.84, "tickets": 136, "messages": 304, "frtMin": 1.0833333333333333, "artMin": 2.1333333333333333, "frtDisplay": "1m 05s", "artDisplay": "2m 08s", "ticketsPerHr": 6.36, "messagesPerHr": 14.22, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 23, "bwReplied": 17, "bwDm": 3, "shopifyAlerts": 14}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Krisha", "csat": 5.0, "qa": 50.0, "ha": 0.61, "tickets": 114, "messages": 244, "frtMin": 3.7666666666666666, "artMin": 6.1, "frtDisplay": "3m 46s", "artDisplay": "6m 06s", "ticketsPerHr": 4.71, "messagesPerHr": 10.07, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 25, "bwReplied": 4, "bwDm": 0, "shopifyAlerts": 1}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Jordan", "csat": 4.18, "qa": 28.7, "ha": 0.51, "tickets": 110, "messages": 213, "frtMin": 3.716666666666667, "artMin": 5.666666666666667, "frtDisplay": "3m 43s", "artDisplay": "5m 40s", "ticketsPerHr": 3.87, "messagesPerHr": 7.5, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 4, "bwReplied": 4, "bwDm": 0, "shopifyAlerts": 3}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Jerel", "csat": 4.4, "qa": 47.3, "ha": 0.81, "tickets": 96, "messages": 254, "frtMin": 2.5166666666666666, "artMin": 2.55, "frtDisplay": "2m 31s", "artDisplay": "2m 33s", "ticketsPerHr": 5.23, "messagesPerHr": 13.84, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 130, "bwReplied": 0, "bwDm": 8, "shopifyAlerts": 16}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Carla", "csat": 4.43, "qa": 50.0, "ha": 0.81, "tickets": 102, "messages": 276, "frtMin": 0.0, "artMin": 2.033333333333333, "frtDisplay": "45s", "artDisplay": "2m 02s", "ticketsPerHr": 5.05, "messagesPerHr": 13.67, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 53, "bwReplied": 12, "bwDm": 0, "shopifyAlerts": 8}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Angelo", "csat": 4.33, "qa": 42.0, "ha": 0.71, "tickets": 114, "messages": 271, "frtMin": 1.3833333333333333, "artMin": 3.183333333333333, "frtDisplay": "1m 23s", "artDisplay": "3m 11s", "ticketsPerHr": 4.91, "messagesPerHr": 11.67, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 1, "bwReplied": 5, "bwDm": 5, "shopifyAlerts": 9}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Denver", "csat": 5.0, "qa": 44.7, "ha": 0.7, "tickets": 35, "messages": 65, "frtMin": 20.383333333333333, "artMin": 8.25, "frtDisplay": "20m 23s", "artDisplay": "8m 15s", "ticketsPerHr": 1.7, "messagesPerHr": 3.16, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 6, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 2}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Christian", "csat": null, "qa": null, "ha": 0.68, "tickets": 0, "messages": 0, "frtMin": 0.0, "artMin": 0.0, "frtDisplay": "0", "artDisplay": "0", "ticketsPerHr": 0.0, "messagesPerHr": 0.0, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 0}, {"monthWeek": "June - W4", "month": "June", "week": "W4", "dateRange": "June 22 - June 28", "agent": "Luzel", "csat": null, "qa": null, "ha": 0.57, "tickets": 13, "messages": 21, "frtMin": 0.0, "artMin": 10.066666666666666, "frtDisplay": "0", "artDisplay": "10m 04s", "ticketsPerHr": 1.32, "messagesPerHr": 2.13, "ticketsTarget": 77.08333333, "messagesTarget": 242.75, "tphTarget": 1.927083333, "mphTarget": 6.06875, "bwDeleted": 0, "bwReplied": 0, "bwDm": 0, "shopifyAlerts": 1}]
+</script>
+
+<script>
+const DATA = JSON.parse(document.getElementById('raw-data').textContent);
+
+const ADMIN_AGENTS = ['Luzel','Christian','Denver'];
+const INACTIVE_AGENTS = ['Justine','Jude','Earl','Jesthel'];
+function agentStatus(agent){
+  if(INACTIVE_AGENTS.includes(agent)) return 'Inactive';
+  if(ADMIN_AGENTS.includes(agent)) return 'Admin';
+  return 'Active';
+}
+
+/* ---------------- Scoring (mirrors the Google Sheet ARRAYFORMULA rules) ---------------- */
+function scoreCsat(v){ if(v==null) return null; if(v>=4.8) return 30; if(v>=4.5) return 27; if(v>=4.2) return 24; if(v>=4.0) return 20; if(v>=3.8) return 15; if(v>=3.0) return 5; return 0; }
+function scoreQa(v){ if(v==null) return null; if(v>=50) return 30; if(v>=47) return 29; if(v>=43) return 27; if(v>=40) return 25; if(v>=35) return 16; if(v>=30) return 9; if(v>=25) return 5; return 0; }
+function scoreHa(v){ if(v==null) return null; if(v>=0.68) return 5; if(v>=0.65) return 4; if(v>=0.63) return 3; if(v>=0.60) return 2; if(v>=0.53) return 1; if(v>=0.52) return 1; return 0; }
+/* Volume + Efficiency metrics score against a per-week, volume-adjusted target (ratio-based, mirrors the sheet's dynamic target columns) */
+function scoreRatioTickets(r){ if(r==null) return null; if(r>=1.0) return 10; if(r>=0.8) return 8; if(r>=0.667) return 6; if(r>=0.6) return 4; if(r>=0.533) return 2; return 0; }
+function scoreRatioMessages(r){ if(r==null) return null; if(r>=1.0) return 7; if(r>=0.8) return 6; if(r>=0.64) return 4; if(r>=0.56) return 2; if(r>=0.4) return 1; return 0; }
+function scoreRatioTph(r){ if(r==null) return null; if(r>=1.0) return 6; if(r>=0.857) return 5; if(r>=0.714) return 4; if(r>=0.571) return 3; if(r>=0.4286) return 1; return 0; }
+function scoreRatioMph(r){ if(r==null) return null; if(r>=1.0) return 6; if(r>=0.833) return 5; if(r>=0.75) return 4; if(r>=0.667) return 3; if(r>=0.583) return 2; if(r>=0.5) return 1; return 0; }
+function scoreFrt(m){ if(m==null) return null; return m<=30 ? 3 : 0; }
+function scoreArt(m){ if(m==null) return null; return m<=30 ? 3 : 0; }
+function statusFor(total){ if(total>=90) return 'Excellent'; if(total>=85) return 'Targets Met'; if(total>=80) return 'Below Target'; return 'Monitoring'; }
+function statusClass(s){ return 'st-' + s.replace(/\s/g,''); }
+function statusColor(s){ return {Excellent:'var(--excellent)','Targets Met':'var(--targets)','Below Target':'var(--below)',Monitoring:'var(--monitor)'}[s]; }
+
+const MAX_PTS = { csat:30, qa:30, ha:5, tickets:10, messages:7, tph:6, mph:6, frt:3, art:3 };
+
+function ratio(a,b){ if(a==null || b==null || b===0) return null; return a/b; }
+
+function computeScores(raw){
+  const parts = {
+    csat: scoreCsat(raw.csat), qa: scoreQa(raw.qa), ha: scoreHa(raw.ha),
+    tickets: scoreRatioTickets(ratio(raw.tickets, raw.ticketsTarget)),
+    messages: scoreRatioMessages(ratio(raw.messages, raw.messagesTarget)),
+    tph: scoreRatioTph(ratio(raw.ticketsPerHr, raw.tphTarget)),
+    mph: scoreRatioMph(ratio(raw.messagesPerHr, raw.mphTarget)),
+    frt: scoreFrt(raw.frtMin), art: scoreArt(raw.artMin),
+  };
+  const total = Object.values(parts).reduce((a,b)=>a+(b||0),0);
+  return { parts, total, status: statusFor(total) };
+}
+
+function avg(arr){ const v = arr.filter(x=>x!=null && !isNaN(x)); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; }
+function sum(arr){ const v = arr.filter(x=>x!=null && !isNaN(x)); return v.length ? v.reduce((a,b)=>a+b,0) : 0; }
+
+function aggregate(records){
+  const raw = {
+    csat: avg(records.map(r=>r.csat)), qa: avg(records.map(r=>r.qa)), ha: avg(records.map(r=>r.ha)),
+    tickets: avg(records.map(r=>r.tickets)), messages: avg(records.map(r=>r.messages)),
+    ticketsPerHr: avg(records.map(r=>r.ticketsPerHr)), messagesPerHr: avg(records.map(r=>r.messagesPerHr)),
+    frtMin: avg(records.map(r=>r.frtMin)), artMin: avg(records.map(r=>r.artMin)),
+    ticketsTarget: avg(records.map(r=>r.ticketsTarget)), messagesTarget: avg(records.map(r=>r.messagesTarget)),
+    tphTarget: avg(records.map(r=>r.tphTarget)), mphTarget: avg(records.map(r=>r.mphTarget)),
+  };
+  const productivity = {
+    ticketsTotal: sum(records.map(r=>r.tickets)), messagesTotal: sum(records.map(r=>r.messages)),
+    bwDeleted: sum(records.map(r=>r.bwDeleted)), bwReplied: sum(records.map(r=>r.bwReplied)),
+    bwDm: sum(records.map(r=>r.bwDm)), shopifyAlerts: sum(records.map(r=>r.shopifyAlerts)),
+  };
+  const scored = computeScores(raw);
+  const agent = records[0] ? records[0].agent : null;
+  return { agent, status: agentStatus(agent), raw, productivity, weeksCount: records.length, weeks: records.map(r=>r.monthWeek), ...scored };
+}
+/* NOTE: aggregate() spreads computeScores() last, so its .status (Excellent/etc) overwrites agentStatus(); keep roster status separate */
+function aggregateFixed(records){
+  const a = aggregate(records);
+  a.rosterStatus = agentStatus(a.agent);
+  return a;
+}
+
+/* ---------------- Formatting helpers ---------------- */
+function fmtCsat(v){ return v==null ? '—' : v.toFixed(2); }
+function fmtQa(v){ return v==null ? '—' : v.toFixed(1); }
+function fmtPct(v){ return v==null ? '—' : Math.round(v*100) + '%'; }
+function fmtInt(v){ return v==null ? '—' : Math.round(v).toLocaleString(); }
+function fmtRate(v){ return v==null ? '—' : v.toFixed(2); }
+function fmtMin(m){
+  if(m==null) return '—';
+  if(m >= 60){ const h = Math.floor(m/60), mm = Math.round(m%60); return h+'h '+mm+'m'; }
+  const mins = Math.floor(m), secs = Math.round((m-mins)*60);
+  return mins>0 ? mins+'m '+secs+'s' : secs+'s';
+}
+
+/* ---------------- Month / week ordering ---------------- */
+const MONTH_ORDER = ['April','May','June'];
+const ALL_WEEKS = [...new Set(DATA.map(r=>r.monthWeek))].sort((a,b)=>{
+  const [ma,wa] = a.split(' - '), [mb,wb] = b.split(' - ');
+  const mi = MONTH_ORDER.indexOf(ma) - MONTH_ORDER.indexOf(mb);
+  if(mi!==0) return mi;
+  return parseInt(wa.slice(1)) - parseInt(wb.slice(1));
+});
+
+/* ---------------- State ---------------- */
+let state = { dateMode:'month', month:'June', week: ALL_WEEKS[ALL_WEEKS.length-1], agentMode:'all', agent:null,
+              prodSort:{key:'ticketsTotal', dir:'desc'} };
+
+/* ---------------- Filtering ---------------- */
+function getScopedRecords(){
+  if(state.dateMode==='week') return DATA.filter(r=>r.monthWeek===state.week);
+  if(state.dateMode==='month') return DATA.filter(r=>r.month===state.month);
+  return DATA.slice();
+}
+function groupByAgent(records){
+  const map = {};
+  records.forEach(r=>{ (map[r.agent] = map[r.agent] || []).push(r); });
+  return map;
+}
+function agentAggregates(){
+  const grouped = groupByAgent(getScopedRecords());
+  return Object.keys(grouped).map(a => aggregateFixed(grouped[a]));
+}
+
+/* ---------------- Rendering: filter bar ---------------- */
+function renderFilterControls(){
+  document.querySelectorAll('#dateModeSeg button').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.dateMode));
+  document.querySelectorAll('#agentModeSeg button').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.agentMode));
+
+  const weekSel = document.getElementById('weekSelect');
+  const monthSel = document.getElementById('monthSelect');
+  weekSel.style.display = state.dateMode==='week' ? 'inline-block' : 'none';
+  monthSel.style.display = state.dateMode==='month' ? 'inline-block' : 'none';
+
+  if(weekSel.options.length===0){
+    ALL_WEEKS.forEach(w=>{
+      const rec = DATA.find(r=>r.monthWeek===w);
+      const opt = document.createElement('option'); opt.value = w; opt.textContent = w + ' · ' + rec.dateRange;
+      weekSel.appendChild(opt);
+    });
+  }
+  weekSel.value = state.week;
+
+  if(monthSel.options.length===0){
+    MONTH_ORDER.forEach(m=>{ const opt = document.createElement('option'); opt.value=m; opt.textContent=m+' 2026'; monthSel.appendChild(opt); });
+  }
+  monthSel.value = state.month;
+
+  const agentSel = document.getElementById('agentSelect');
+  agentSel.style.display = state.agentMode==='individual' ? 'inline-block' : 'none';
+  const agentsInScope = [...new Set(getScopedRecords().map(r=>r.agent))].sort();
+  agentSel.innerHTML = '';
+  agentsInScope.forEach(a=>{ const opt = document.createElement('option'); opt.value=a; opt.textContent=a+' ('+agentStatus(a)+')'; agentSel.appendChild(opt); });
+  if(!state.agent || !agentsInScope.includes(state.agent)) state.agent = agentsInScope[0] || null;
+  agentSel.value = state.agent;
+
+  const scopeLine = document.getElementById('scopeLine');
+  let scopeText = '';
+  if(state.dateMode==='week'){ const rec = DATA.find(r=>r.monthWeek===state.week); scopeText = state.week + ' <span style="color:var(--text-faint)">(' + rec.dateRange + ')</span>'; }
+  else if(state.dateMode==='month'){ scopeText = state.month + ' 2026 <span style="color:var(--text-faint)">· ' + agentsInScope.length + ' agents</span>'; }
+  else { scopeText = 'Q2 2026 <span style="color:var(--text-faint)">(Apr–Jun) · ' + agentsInScope.length + ' agents total</span>'; }
+  scopeLine.innerHTML = '<b>' + scopeText + '</b>';
+
+  document.getElementById('topNote').textContent = state.dateMode==='all'
+    ? 'Ranked by Total Score, Active & Admin agents only (Inactive agents are excluded from the Q2 overall ranking)'
+    : 'Ranked by Total Score across all agents active in the selected period';
+}
+
+/* ---------------- Rendering: Top performer ---------------- */
+function renderTopPerformer(){
+  let aggs = agentAggregates().filter(a=>a.total>0 || a.weeksCount>0);
+  if(state.dateMode==='all') aggs = aggs.filter(a=>a.rosterStatus!=='Inactive');
+  aggs = aggs.sort((a,b)=>b.total-a.total);
+
+  const wrap = document.getElementById('topPerformerWrap');
+  if(aggs.length===0){ wrap.innerHTML = '<p class="block-note">No data for this period.</p>'; return; }
+  const top = aggs[0];
+  const board = aggs.slice(1,6);
+  const maxScore = Math.max(top.total, ...board.map(a=>a.total), 1);
+
+  wrap.innerHTML = `
+    <div class="hero">
+      <span class="hero-eyebrow">Top performer this period</span>
+      <span class="hero-name">${top.agent}</span>
+      <span class="hero-meta">${top.status} · ${top.weeksCount} week${top.weeksCount!==1?'s':''} of data</span>
+      <div class="hero-score"><span class="num">${top.total}</span><span class="label">/ 100</span></div>
+    </div>
+    <div class="leaderboard">
+      ${board.map((a,i)=>`
+        <div class="lb-row">
+          <span class="lb-rank">#${i+2}</span>
+          <span class="lb-name">${a.agent}</span>
+          <div class="lb-bar-wrap"><div class="lb-bar" style="width:${(a.total/maxScore*100).toFixed(0)}%; background:${statusColor(a.status)}"></div></div>
+          <span class="lb-score num">${a.total}</span>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+/* ---------------- Rendering: Scorecard ---------------- */
+const TARGET = { csat:'≥4.5', qa:'≥42.5', ha:'≥65%', tickets:'Volume-based', messages:'Volume-based', tph:'Volume-based', mph:'Volume-based', frt:'≤30m', art:'≤30m', score:'≥85' };
+
+function scorecardGroupHeader(){
+  return `
+    <tr class="grp-row">
+      <th class="g-agent agent-head"></th>
+      <th colspan="2" class="g-quality">Quality</th>
+      <th class="g-attend">Attend.</th>
+      <th colspan="2" class="g-volume">Volume<span class="grp-sub">volume-based target</span></th>
+      <th colspan="2" class="g-speed">Speed</th>
+      <th colspan="2" class="g-effic">Effic.<span class="grp-sub">volume-based target</span></th>
+      <th colspan="2" class="g-outcome">Outcome</th>
+    </tr>
+    <tr class="sub-row">
+      <th class="agent-head">Agent</th>
+      <th>CSAT</th><th>QA</th><th>HS%</th><th>Tck</th><th>Msg</th>
+      <th>FRT</th><th>ART</th><th>T/Hr</th><th>M/Hr</th>
+      <th>Score</th><th>Status</th>
+    </tr>`;
+}
+
+function scoreCellHTML(total, status){
+  return `<div class="score-cell">
+    <div class="score-bar-wrap"><div class="score-bar" style="width:${Math.min(total,100)}%; background:${statusColor(status)}"></div></div>
+    <span class="score-num" style="color:${statusColor(status)}">${total}</span>
+  </div>`;
+}
+
+function renderScorecardAllTable(aggs){
+  const sorted = aggs.slice().sort((a,b)=>b.total-a.total);
+  const rows = sorted.map(a => `
+    <tr>
+      <td class="agent-cell"><span class="agent-name">${a.agent}</span><span class="badge badge-${a.rosterStatus}">${a.rosterStatus}</span></td>
+      <td class="num">${fmtCsat(a.raw.csat)}</td>
+      <td class="num">${fmtQa(a.raw.qa)}</td>
+      <td class="num">${fmtPct(a.raw.ha)}</td>
+      <td class="num">${fmtInt(a.raw.tickets)}</td>
+      <td class="num">${fmtInt(a.raw.messages)}</td>
+      <td class="num">${fmtMin(a.raw.frtMin)}</td>
+      <td class="num">${fmtMin(a.raw.artMin)}</td>
+      <td class="num">${fmtRate(a.raw.ticketsPerHr)}</td>
+      <td class="num">${fmtRate(a.raw.messagesPerHr)}</td>
+      <td>${scoreCellHTML(a.total, a.status)}</td>
+      <td><span class="status-pill ${statusClass(a.status)}">${a.status}</span></td>
+    </tr>`).join('');
+
+  return `
+    <div class="table-scroll">
+      <table class="scorecard">
+        <thead>
+          ${scorecardGroupHeader()}
+        </thead>
+        <tbody>
+          <tr class="target-row">
+            <td class="agent-cell">Target →</td>
+            <td>${TARGET.csat}</td><td>${TARGET.qa}</td><td>${TARGET.ha}</td>
+            <td class="vol-based">${TARGET.tickets}</td><td class="vol-based">${TARGET.messages}</td>
+            <td>${TARGET.frt}</td><td>${TARGET.art}</td>
+            <td class="vol-based">${TARGET.tph}</td><td class="vol-based">${TARGET.mph}</td>
+            <td>${TARGET.score}</td><td>—</td>
+          </tr>
+          ${rows}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function tileClass(pts, max){
+  if(pts==null) return '';
+  const r = pts/max;
+  if(r>=0.9) return 'tile-ok';
+  if(r>=0.5) return 'tile-warn';
+  return 'tile-bad';
+}
+function metricTile(label, val, pts, maxPts){
+  return `<div class="metric-tile ${tileClass(pts,maxPts)}"><div class="mt-label">${label}</div><div class="mt-val">${val}<span class="mt-pts">${pts==null?'':pts+' / '+maxPts+' pts'}</span></div></div>`;
+}
+
+function activityTileClass(total, allTotals){
+  const v = allTotals.slice().sort((a,b)=>a-b);
+  if(v.length < 4) return 'tile-ok';
+  const q1 = v[Math.floor(v.length*0.25)];
+  const median = v[Math.floor(v.length*0.5)];
+  if(total<=q1) return 'tile-bad';
+  if(total<=median) return 'tile-warn';
+  return 'tile-ok';
+}
+
+function renderScorecardIndividual(agg, allAggs){
+  if(!agg || agg.weeksCount===0){
+    return `<div class="card"><p class="block-note">No data for this agent in the selected period.</p></div>`;
+  }
+  const totalActivity = agg.productivity.ticketsTotal + agg.productivity.messagesTotal + agg.productivity.bwDeleted + agg.productivity.bwReplied + agg.productivity.bwDm + agg.productivity.shopifyAlerts;
+  const allTotals = allAggs.map(a=>a.productivity.ticketsTotal + a.productivity.messagesTotal + a.productivity.bwDeleted + a.productivity.bwReplied + a.productivity.bwDm + a.productivity.shopifyAlerts);
+  const weeksRows = agg.weeks.map(w=>{
+    const rec = DATA.find(r=>r.monthWeek===w && r.agent===agg.agent);
+    const sc = computeScores(rec);
+    return `<tr><td>${w}</td><td>${rec.dateRange}</td><td class="num">${fmtCsat(rec.csat)}</td><td class="num">${fmtQa(rec.qa)}</td><td class="num">${sc.total}</td><td><span class="status-pill ${statusClass(sc.status)}">${sc.status}</span></td></tr>`;
+  }).join('');
+
+  return `
+    <div class="card">
+      <div class="indiv-card">
+        <div class="indiv-score-block">
+          <span class="badge badge-${agg.rosterStatus}">${agg.rosterStatus}</span>
+          <span class="hero-eyebrow" style="color:${statusColor(agg.status)}">${agg.status}</span>
+          <span class="indiv-score-num" style="color:${statusColor(agg.status)}">${agg.total}</span>
+          <span class="block-note">out of 100 · ${agg.weeksCount} week${agg.weeksCount!==1?'s':''}</span>
+        </div>
+        <div>
+          <div class="metric-grid">
+            ${metricTile('CSAT', fmtCsat(agg.raw.csat), agg.parts.csat, MAX_PTS.csat)}
+            ${metricTile('QA Score', fmtQa(agg.raw.qa), agg.parts.qa, MAX_PTS.qa)}
+            ${metricTile('Hubstaff Activity', fmtPct(agg.raw.ha), agg.parts.ha, MAX_PTS.ha)}
+            ${metricTile('Tickets / wk', fmtInt(agg.raw.tickets), agg.parts.tickets, MAX_PTS.tickets)}
+            ${metricTile('Messages / wk', fmtInt(agg.raw.messages), agg.parts.messages, MAX_PTS.messages)}
+            ${metricTile('Tickets / Hr', fmtRate(agg.raw.ticketsPerHr), agg.parts.tph, MAX_PTS.tph)}
+            ${metricTile('Messages / Hr', fmtRate(agg.raw.messagesPerHr), agg.parts.mph, MAX_PTS.mph)}
+            ${metricTile('FRT', fmtMin(agg.raw.frtMin), agg.parts.frt, MAX_PTS.frt)}
+            ${metricTile('ART', fmtMin(agg.raw.artMin), agg.parts.art, MAX_PTS.art)}
+            <div class="metric-tile ${activityTileClass(totalActivity, allTotals)}"><div class="mt-label">Total Activity</div><div class="mt-val">${fmtInt(totalActivity)}</div></div>
+          </div>
+          ${agg.weeksCount>1 ? `
+          <div class="weeks-mini">
+            <table>
+              <thead><tr><th>Week</th><th>Range</th><th>CSAT</th><th>QA</th><th>Score</th><th>Status</th></tr></thead>
+              <tbody>${weeksRows}</tbody>
+            </table>
+          </div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderScorecard(){
+  const aggs = agentAggregates();
+  const title = document.getElementById('scorecardTitle');
+  const area = document.getElementById('scorecardArea');
+  if(state.agentMode==='all'){
+    title.textContent = 'Agent Score — All Agents';
+    area.innerHTML = renderScorecardAllTable(aggs);
+  } else {
+    const agg = aggs.find(a=>a.agent===state.agent);
+    title.innerHTML = 'Agent Score — ' + (state.agent || '');
+    area.innerHTML = renderScorecardIndividual(agg, aggs);
+  }
+}
+
+/* ---------------- Rendering: Productivity ---------------- */
+const PROD_COLS = [
+  {key:'agent', label:'Agent', numeric:false},
+  {key:'ticketsTotal', label:'Tickets', numeric:true},
+  {key:'messagesTotal', label:'Messages', numeric:true},
+  {key:'bwDeleted', label:'BW Deleted', numeric:true},
+  {key:'bwReplied', label:'BW Replied', numeric:true},
+  {key:'bwDm', label:'BW DM', numeric:true},
+  {key:'shopifyAlerts', label:'Shopify Alerts', numeric:true},
+  {key:'total', label:'Total Activity', numeric:true},
+];
+
+function rowFromAgg(a){
+  return {
+    agent: a.agent,
+    ticketsTotal: a.productivity.ticketsTotal,
+    messagesTotal: a.productivity.messagesTotal,
+    bwDeleted: a.productivity.bwDeleted,
+    bwReplied: a.productivity.bwReplied,
+    bwDm: a.productivity.bwDm,
+    shopifyAlerts: a.productivity.shopifyAlerts,
+    total: a.productivity.ticketsTotal + a.productivity.messagesTotal + a.productivity.bwDeleted + a.productivity.bwReplied + a.productivity.bwDm + a.productivity.shopifyAlerts,
+  };
+}
+
+function renderProdHead(){
+  const {key, dir} = state.prodSort;
+  const headRow = document.getElementById('prodHeadRow');
+  headRow.innerHTML = PROD_COLS.map(c=>`<th data-key="${c.key}" class="${c.key===key?'sorted':''}">${c.label}${c.key===key ? (dir==='asc'?' ↑':' ↓') : ''}</th>`).join('');
+  headRow.querySelectorAll('th').forEach(th=>{
+    th.onclick = ()=>{
+      const k = th.dataset.key;
+      if(state.prodSort.key===k) state.prodSort.dir = state.prodSort.dir==='asc'?'desc':'asc';
+      else state.prodSort = {key:k, dir:'desc'};
+      renderProductivity();
+    };
+  });
+}
+
+function quartileCutoff(values){
+  const v = values.slice().sort((a,b)=>a-b);
+  if(v.length < 4) return -Infinity;
+  const idx = Math.floor(v.length * 0.25);
+  return v[idx];
+}
+
+function renderProductivity(){
+  renderProdHead();
+  const body = document.getElementById('prodBody');
+
+  if(state.agentMode==='individual'){
+    const grouped = groupByAgent(getScopedRecords());
+    const recs = (grouped[state.agent] || []).slice().sort((a,b)=>ALL_WEEKS.indexOf(a.monthWeek)-ALL_WEEKS.indexOf(b.monthWeek));
+    if(recs.length===0){ body.innerHTML = `<tr><td colspan="8" class="empty-val">No data for this agent in the selected period.</td></tr>`; return; }
+    const rows = recs.map(r=>{
+      const total = (r.tickets||0)+(r.messages||0)+(r.bwDeleted||0)+(r.bwReplied||0)+(r.bwDm||0)+(r.shopifyAlerts||0);
+      return `<tr>
+        <td>${r.monthWeek}</td>
+        <td class="num">${fmtInt(r.tickets)}</td>
+        <td class="num">${fmtInt(r.messages)}</td>
+        <td class="num">${r.bwDeleted ? fmtInt(r.bwDeleted) : '<span class="empty-val">—</span>'}</td>
+        <td class="num">${r.bwReplied ? fmtInt(r.bwReplied) : '<span class="empty-val">—</span>'}</td>
+        <td class="num">${r.bwDm ? fmtInt(r.bwDm) : '<span class="empty-val">—</span>'}</td>
+        <td class="num">${r.shopifyAlerts ? fmtInt(r.shopifyAlerts) : '<span class="empty-val">—</span>'}</td>
+        <td class="num total-col">${fmtInt(total)}</td>
+      </tr>`;
+    }).join('');
+    let totalsRow = '';
+    if(recs.length>1){
+      const t = recs.reduce((acc,r)=>({
+        tickets: acc.tickets+(r.tickets||0), messages: acc.messages+(r.messages||0),
+        bwDeleted: acc.bwDeleted+(r.bwDeleted||0), bwReplied: acc.bwReplied+(r.bwReplied||0),
+        bwDm: acc.bwDm+(r.bwDm||0), shopifyAlerts: acc.shopifyAlerts+(r.shopifyAlerts||0),
+      }), {tickets:0,messages:0,bwDeleted:0,bwReplied:0,bwDm:0,shopifyAlerts:0});
+      const grand = t.tickets+t.messages+t.bwDeleted+t.bwReplied+t.bwDm+t.shopifyAlerts;
+      totalsRow = `<tr class="total-row">
+        <td>Total</td><td class="num">${fmtInt(t.tickets)}</td><td class="num">${fmtInt(t.messages)}</td>
+        <td class="num">${fmtInt(t.bwDeleted)}</td><td class="num">${fmtInt(t.bwReplied)}</td>
+        <td class="num">${fmtInt(t.bwDm)}</td><td class="num">${fmtInt(t.shopifyAlerts)}</td>
+        <td class="num total-col">${fmtInt(grand)}</td>
+      </tr>`;
+    }
+    body.innerHTML = rows + totalsRow;
+    return;
+  }
+
+  const aggs = agentAggregates();
+  let rows = aggs.map(rowFromAgg);
+  const cutoff = quartileCutoff(rows.map(r=>r.total));
+
+  const {key, dir} = state.prodSort;
+  rows.sort((a,b)=>{
+    const va = a[key], vb = b[key];
+    if(typeof va === 'string') return dir==='asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    return dir==='asc' ? va-vb : vb-va;
+  });
+
+  body.innerHTML = rows.map(r=>`
+    <tr class="${r.total<=cutoff ? 'low-activity' : ''}">
+      <td>${r.agent}</td>
+      <td class="num">${fmtInt(r.ticketsTotal)}</td>
+      <td class="num">${fmtInt(r.messagesTotal)}</td>
+      <td class="num">${r.bwDeleted ? fmtInt(r.bwDeleted) : '<span class="empty-val">—</span>'}</td>
+      <td class="num">${r.bwReplied ? fmtInt(r.bwReplied) : '<span class="empty-val">—</span>'}</td>
+      <td class="num">${r.bwDm ? fmtInt(r.bwDm) : '<span class="empty-val">—</span>'}</td>
+      <td class="num">${r.shopifyAlerts ? fmtInt(r.shopifyAlerts) : '<span class="empty-val">—</span>'}</td>
+      <td class="num total-col">${fmtInt(r.total)}</td>
+    </tr>`).join('');
+}
+
+/* ---------------- Wire up events ---------------- */
+document.querySelectorAll('#dateModeSeg button').forEach(b=>{
+  b.addEventListener('click', ()=>{ state.dateMode = b.dataset.mode; renderAll(); });
+});
+document.querySelectorAll('#agentModeSeg button').forEach(b=>{
+  b.addEventListener('click', ()=>{ state.agentMode = b.dataset.mode; renderAll(); });
+});
+document.getElementById('weekSelect').addEventListener('change', e=>{ state.week = e.target.value; renderAll(); });
+document.getElementById('monthSelect').addEventListener('change', e=>{ state.month = e.target.value; renderAll(); });
+document.getElementById('agentSelect').addEventListener('change', e=>{ state.agent = e.target.value; renderAll(); });
+
+function renderAll(){
+  renderFilterControls();
+  renderTopPerformer();
+  renderScorecard();
+  renderProductivity();
+}
+renderAll();
+</script>
+</body>
+</html>
