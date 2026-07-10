@@ -37,6 +37,12 @@
     --g-outcome: #35405C;
     --g-agent: #232E42;
 
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 14px 32px -14px rgba(0,0,0,0.55);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.25), 0 6px 16px -8px rgba(0,0,0,0.4);
+    --track: #0F1621;
+    --seg-active-text: #0E1520;
+    --hero-glow: rgba(52,211,153,0.10);
+
     --radius: 10px;
     --radius-lg: 16px;
   }
@@ -50,6 +56,8 @@
     font-size: 14px;
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
+    transition: background .25s ease, color .25s ease;
+    min-height: 100vh;
   }
   .num{ font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace; font-variant-numeric: tabular-nums; }
 
@@ -59,6 +67,7 @@
   .sticky-head{
     position: sticky; top: 0; z-index: 100; background: var(--bg);
     padding-top: 22px; margin: 0 -18px; padding-left:18px; padding-right:18px;
+    padding-bottom: 2px; border-bottom: 1px solid var(--border-soft);
   }
 
   /* ---------- Header ---------- */
@@ -77,7 +86,7 @@
   .scope-line{
     font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--text-dim);
     background: var(--panel); border:1px solid var(--border); border-radius:999px;
-    padding:7px 14px; white-space:nowrap;
+    padding:7px 14px; white-space:nowrap; box-shadow: var(--shadow-sm);
   }
   .scope-line b{ color:var(--text); font-weight:600; }
 
@@ -85,7 +94,7 @@
   .filterbar{
     display:flex; align-items:center; gap:10px; flex-wrap:wrap;
     background: var(--panel); border:1px solid var(--border); border-radius: var(--radius-lg);
-    padding:14px 16px; margin-bottom:22px;
+    padding:14px 16px; margin-bottom:22px; box-shadow: var(--shadow-sm);
   }
   .filter-group{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .filter-label{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); margin-right:2px; }
@@ -95,7 +104,7 @@
     font-family:'Inter', sans-serif; font-size:12.5px; font-weight:600; padding:6px 12px; border-radius:6px; cursor:pointer;
     transition: background .15s, color .15s;
   }
-  .seg button.active{ background: var(--accent); color:#0E1520; }
+  .seg button.active{ background: var(--accent); color:var(--seg-active-text); }
   .seg button:hover:not(.active){ color:var(--text); }
 
   select{
@@ -113,46 +122,47 @@
   .block-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
   .block-title{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:17px; }
   .block-note{ font-size:12px; color:var(--text-faint); }
-  .card{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px; }
+  .score-formula-note{ font-size:11.5px; color:var(--text-faint); margin:10px 2px 0; line-height:1.5; }
+  .card{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px; box-shadow: var(--shadow-card); }
 
   /* ---------- Agent status badges ---------- */
   .badge{ display:inline-block; padding:2px 9px; border-radius:99px; font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; }
-  .badge-Active{ background:rgba(79,209,197,0.14); color:var(--accent); }
-  .badge-Admin{ background:rgba(96,165,250,0.14); color:var(--targets); }
+  .badge-Active{ background:var(--accent-dim); color:var(--accent); }
+  .badge-Admin{ background:var(--targets-bg); color:var(--targets); }
   .badge-Inactive{ background:rgba(93,107,130,0.18); color:var(--text-faint); }
 
   /* ---------- Top performer ---------- */
   .top-wrap{ display:grid; grid-template-columns: 1.1fr 1.4fr; gap:14px; }
   @media (max-width:760px){ .top-wrap{ grid-template-columns:1fr; } }
   .hero{
-    background: linear-gradient(135deg, #16332C 0%, var(--panel) 65%);
-    border:1px solid #234238; border-radius:var(--radius-lg); padding:14px 18px;
+    background: linear-gradient(135deg, #16332C 0%, var(--panel) 65%); border:1px solid #234238;
+    border-radius:var(--radius-lg); padding:14px 18px; box-shadow: var(--shadow-sm);
     display:flex; flex-direction:column; justify-content:center; gap:4px; position:relative; overflow:hidden; min-height:118px;
   }
   .hero::after{
     content:"01"; position:absolute; right:8px; top:50%; transform:translateY(-50%); text-align:center;
-    font-family:'JetBrains Mono',monospace; font-size:104px; font-weight:700; color:rgba(52,211,153,0.10); line-height:1;
+    font-family:'JetBrains Mono',monospace; font-size:104px; font-weight:700; color:var(--hero-glow); line-height:1;
   }
   .hero-eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--excellent); }
   .hero-name{ font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; }
   .hero-meta{ color:var(--text-dim); font-size:12px; }
   .hero-score{ display:flex; align-items:baseline; gap:8px; margin-top:2px; }
-  .hero-score .num{ font-size:28px; font-weight:600; color:var(--excellent); }
+  .hero-score .num{ font-size:36px; font-weight:700; color:var(--excellent); }
   .hero-score .label{ color:var(--text-faint); font-size:12px; }
 
   .leaderboard{ display:flex; flex-direction:column; gap:8px; }
   .lb-row{
     display:flex; align-items:center; gap:12px; background:var(--panel-2); border:1px solid var(--border-soft);
-    border-radius:10px; padding:10px 14px;
+    border-radius:10px; padding:10px 14px; box-shadow: var(--shadow-sm);
   }
   .lb-rank{ font-family:'JetBrains Mono',monospace; color:var(--text-faint); width:20px; font-size:13px; }
   .lb-name{ flex:1; font-weight:600; font-size:13.5px; }
-  .lb-bar-wrap{ flex:1.4; height:6px; background:#0F1621; border-radius:99px; overflow:hidden; }
+  .lb-bar-wrap{ flex:1.4; height:6px; background:var(--track); border-radius:99px; overflow:hidden; }
   .lb-bar{ height:100%; border-radius:99px; }
   .lb-score{ width:34px; text-align:right; font-weight:600; }
 
   /* ---------- Scorecard table ---------- */
-  .table-scroll{ overflow-x:auto; border-radius:var(--radius-lg); border:1px solid var(--border); }
+  .table-scroll{ overflow-x:auto; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-card); }
   table.scorecard{ border-collapse:collapse; width:100%; min-width:960px; background:var(--panel); }
   table.scorecard th, table.scorecard td{ padding:10px 10px; text-align:center; border-bottom:1px solid var(--border-soft); white-space:nowrap; }
   table.scorecard td.agent-cell, table.scorecard th.agent-head{ text-align:left; position:sticky; left:0; z-index:2; min-width:150px; }
@@ -180,17 +190,17 @@
 
   .score-cell{ display:flex; align-items:center; gap:8px; min-width:78px; }
   .score-num{ font-weight:700; width:26px; text-align:right; }
-  .score-bar-wrap{ flex:1; height:6px; background:#0F1621; border-radius:99px; overflow:hidden; min-width:40px; }
+  .score-bar-wrap{ flex:1; height:6px; background:var(--track); border-radius:99px; overflow:hidden; min-width:40px; }
   .score-bar{ height:100%; border-radius:99px; }
   .agent-name{ font-weight:600; margin-right:6px; }
 
   /* ---------- Individual card ---------- */
   .indiv-card{ display:grid; grid-template-columns: 210px 1fr; gap:22px; }
   @media (max-width:700px){ .indiv-card{ grid-template-columns:1fr; } }
-  .indiv-score-block{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:var(--panel-2); border-radius:14px; padding:20px; }
+  .indiv-score-block{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:var(--panel-2); border-radius:14px; padding:20px; box-shadow: var(--shadow-sm); }
   .indiv-score-num{ font-family:'Space Grotesk',sans-serif; font-size:44px; font-weight:700; }
   .metric-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
-  .metric-tile{ background:var(--panel-2); border:1px solid var(--border-soft); border-left:3px solid var(--border-soft); border-radius:10px; padding:10px 12px; }
+  .metric-tile{ background:var(--panel-2); border:1px solid var(--border-soft); border-left:3px solid var(--border-soft); border-radius:10px; padding:10px 12px; box-shadow: var(--shadow-sm); }
   .metric-tile .mt-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:4px; }
   .metric-tile .mt-val{ font-weight:600; font-size:15px; }
   .metric-tile .mt-pts{ font-size:11px; color:var(--text-dim); margin-left:4px; }
@@ -230,7 +240,6 @@
         <h1>2026 Q2 — Agent Scorecard</h1>
         <p class="cx-line">Head of CX: Steven Villegas</p>
       </div>
-      <div class="scope-line" id="scopeLine">—</div>
     </header>
 
     <div class="filterbar">
@@ -253,6 +262,7 @@
         </div>
         <select id="agentSelect" style="display:none;"></select>
       </div>
+      <div class="scope-line" id="scopeLine" style="margin-left:auto;">—</div>
     </div>
   </div>
 
@@ -272,6 +282,7 @@
       <span class="block-note">Target row reflects current live targets</span>
     </div>
     <div id="scorecardArea"></div>
+    <p class="score-formula-note">Score = points earned across CSAT, QA, Attendance, Tickets, Messages, Tickets/Hr, Messages/Hr, FRT &amp; ART (100 max) — for Month / All (Q2), the underlying weekly metrics are averaged first and then re-scored, not an average of weekly scores.</p>
   </section>
 
   <section class="block">
@@ -459,7 +470,7 @@ function renderTopPerformer(){
   const wrap = document.getElementById('topPerformerWrap');
   if(aggs.length===0){ wrap.innerHTML = '<p class="block-note">No data for this period.</p>'; return; }
   const top = aggs[0];
-  const board = aggs.slice(1,6);
+  const board = aggs.slice(1,5);
   const maxScore = Math.max(top.total, ...board.map(a=>a.total), 1);
 
   wrap.innerHTML = `
